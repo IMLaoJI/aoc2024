@@ -20,20 +20,14 @@ fn parse_line(line: String) -> #(Int, Int) {
   }
 }
 
-fn total_distance(tule: #(List(Int), List(Int))) -> Int {
-  let sorted_left = list.sort(tule.0, int.compare)
-  let sorted_right = list.sort(tule.1, int.compare)
-  let distances =
-    list.map2(sorted_left, sorted_right, fn(a, b) { int.absolute_value(a - b) })
-  int.sum(distances)
-}
-
-fn count_occurrences(element: Int, list: List(Int)) -> Int {
-  list.length(list.filter(list, fn(a) { a == element }))
-}
-
-fn get_frequencies(left: List(Int), right: List(Int)) -> List(Int) {
-  list.map(left, fn(element) { count_occurrences(element, right) })
+fn total_distance(list_t: #(List(Int), List(Int))) -> Int {
+  let #(left, right) = list_t
+  list.map2(
+    list.sort(left, int.compare),
+    list.sort(right, int.compare),
+    fn(a, b) { int.absolute_value(a - b) },
+  )
+  |> int.sum
 }
 
 pub fn part1(input: String) -> Int {
@@ -45,13 +39,14 @@ pub fn part1(input: String) -> Int {
 }
 
 pub fn part2(input: String) -> Int {
-  let tuple =
+  let #(left, right) =
     input
     |> str.lines
     |> list.map(parse_line)
     |> list.unzip
-  get_frequencies(tuple.0, tuple.1)
-  |> list.zip(tuple.0, _)
-  |> list.map(fn(t) { t.0 * t.1 })
-  |> li.sum
+
+  left
+  |> list.fold(0, fn(acc, n) {
+    acc + n * { right |> list.count(fn(x) { x == n }) }
+  })
 }
