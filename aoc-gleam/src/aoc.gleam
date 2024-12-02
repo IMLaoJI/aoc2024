@@ -30,12 +30,6 @@ fn part_opt() {
   |> opt.short("p")
   |> opt.help("Part to run")
   |> opt.int
-  |> opt.try_map(fn(part) {
-    case part == 1 || part == 2 {
-      True -> Ok(part)
-      False -> Error("Part must be 1 or 2")
-    }
-  })
 }
 
 fn year_opt() {

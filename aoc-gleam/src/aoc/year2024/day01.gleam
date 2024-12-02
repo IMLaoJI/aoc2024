@@ -1,8 +1,6 @@
-import aoc/util/li
 import aoc/util/re
 import aoc/util/str
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/regexp
 import gleam/result
