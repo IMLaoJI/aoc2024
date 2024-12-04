@@ -64,3 +64,7 @@ pub fn index_find_loop(
     }
   }
 }
+
+pub fn product_tuple(tuple: List(#(Int, Int))) -> Int {
+  list.fold(tuple, 0, fn(accum, mul) { accum + { mul.0 * mul.1 } })
+}

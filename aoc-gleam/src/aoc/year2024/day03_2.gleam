@@ -1,3 +1,4 @@
+import aoc/util/fun
 import aoc/util/re
 import aoc/util/str
 import gleam/bool
@@ -11,40 +12,11 @@ import gleam/result
 import gleam/string
 
 pub fn try_parse_mul(expr: String) -> Result(#(Int, Int), Nil) {
-  let parsed =
-    expr
-    |> string.split(",")
-
+  let parsed = expr |> string.split(",")
   use <- bool.guard(list.length(parsed) != 2, return: Error(Nil))
   use left <- result.try(int.parse(list.first(parsed) |> result.unwrap("0")))
   use right <- result.try(int.parse(list.last(parsed) |> result.unwrap("0")))
-
   Ok(#(left, right))
-}
-
-pub fn parse_part_one(
-  input: String,
-  accum: List(#(Int, Int)),
-) -> List(#(Int, Int)) {
-  case input {
-    "" -> accum
-    "mul(" <> rest -> {
-      let #(muls, after) =
-        rest |> string.split_once(")") |> result.unwrap(#("", ""))
-      io.debug(muls)
-      io.debug(after)
-      case try_parse_mul(muls) {
-        Error(_) -> parse_part_one(rest, accum)
-        Ok(t) -> parse_part_one(after, list.append(accum, [t]))
-      }
-    }
-    _ ->
-      input
-      |> string.pop_grapheme
-      |> result.map(pair.second)
-      |> result.unwrap("")
-      |> parse_part_one(accum)
-  }
 }
 
 pub type ComputerState {
@@ -52,45 +24,55 @@ pub type ComputerState {
   Dont
 }
 
-pub fn parse_part_two(
+pub fn parse_part(
   input: String,
   accum: List(#(Int, Int)),
   state: ComputerState,
+  need_filter: Bool,
 ) -> List(#(Int, Int)) {
   case input {
     "" -> accum
     "mul(" <> rest ->
-      case state {
-        Do -> {
+      case state == Do || need_filter {
+        True -> {
           let #(muls, after) =
             rest |> string.split_once(")") |> result.unwrap(#("", ""))
 
           case try_parse_mul(muls) {
-            Error(_) -> parse_part_two(rest, accum, state)
-            Ok(t) -> parse_part_two(after, list.append(accum, [t]), state)
+            Error(_) -> parse_part(rest, accum, state, need_filter)
+            Ok(t) ->
+              parse_part(after, list.append(accum, [t]), state, need_filter)
           }
         }
-        _ -> parse_part_two(rest, accum, state)
+        False -> parse_part(rest, accum, state, need_filter)
       }
-    "don't()" <> rest -> parse_part_two(rest, accum, Dont)
-    "do()" <> rest -> parse_part_two(rest, accum, Do)
+    "don't()" <> rest -> parse_part(rest, accum, Dont, need_filter)
+    "do()" <> rest -> parse_part(rest, accum, Do, need_filter)
     _ ->
       input
       |> string.pop_grapheme
       |> result.map(pair.second)
       |> result.unwrap("")
-      |> parse_part_two(accum, state)
+      |> parse_part(accum, state, need_filter)
   }
+}
+
+pub fn parse_part_one(input: String) -> List(#(Int, Int)) {
+  parse_part(input, [], Do, True)
+}
+
+pub fn parse_part_two(input: String) -> List(#(Int, Int)) {
+  parse_part(input, [], Do, False)
 }
 
 pub fn part1(input: String) -> Int {
   input
-  |> parse_part_one([])
-  |> list.fold(0, fn(accum, mul) { accum + { mul.0 * mul.1 } })
+  |> parse_part_one
+  |> fun.product_tuple
 }
 
 pub fn part2(input: String) -> Int {
   input
-  |> parse_part_two([], Do)
-  |> list.fold(0, fn(accum, mul) { accum + { mul.0 * mul.1 } })
+  |> parse_part_two
+  |> fun.product_tuple
 }
