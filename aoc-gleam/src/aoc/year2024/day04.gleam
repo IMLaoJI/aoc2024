@@ -45,6 +45,13 @@ fn solution_part_one(array, dict) {
   })
 }
 
+fn get_diagonal_char(dict, diagonal: List(#(Int, Int))) {
+  diagonal
+  |> list.map(fn(t) {
+    result.unwrap(dict.get(dict, array2d.Posn(t.0, t.1)), "")
+  })
+}
+
 fn solution_part_two(array, dict) {
   list.fold(list.range(0, list.length(array)), 0, fn(acc, x) {
     list.fold(
@@ -52,14 +59,13 @@ fn solution_part_two(array, dict) {
       acc,
       fn(sum, y) {
         let char = result.unwrap(dict.get(dict, array2d.Posn(x, y)), "")
-        let char_lt =
-          result.unwrap(dict.get(dict, array2d.Posn(x - 1, y - 1)), "")
-        let char_rb =
-          result.unwrap(dict.get(dict, array2d.Posn(x + 1, y + 1)), "")
-        let char_lb =
-          result.unwrap(dict.get(dict, array2d.Posn(x - 1, y + 1)), "")
-        let char_rt =
-          result.unwrap(dict.get(dict, array2d.Posn(x + 1, y - 1)), "")
+        let assert [char_lt, char_rb, char_lb, char_rt] =
+          get_diagonal_char(dict, [
+            #(x - 1, y - 1),
+            #(x + 1, y + 1),
+            #(x - 1, y + 1),
+            #(x + 1, y - 1),
+          ])
         let is_diagonal_one =
           { char_lt == "M" && char_rb == "S" }
           || { char_lt == "S" && char_rb == "M" }
