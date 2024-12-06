@@ -1,14 +1,12 @@
-import aoc/util/re
-import aoc/util/str
 import aoc/util/to.{int}
-import gleam/bool
+
 import gleam/dict.{type Dict}
-import gleam/function
+
 import gleam/int
-import gleam/io
+
 import gleam/list
 import gleam/order
-import gleam/regexp
+
 import gleam/result
 import gleam/string
 

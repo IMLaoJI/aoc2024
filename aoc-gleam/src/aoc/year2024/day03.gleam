@@ -1,23 +1,9 @@
-import aoc/util/re
-import aoc/util/str
 import gleam/int
-import gleam/io
+
 import gleam/list
 import gleam/option.{Some}
 import gleam/regex.{type Match, Match}
 import gleam/result
-import gleam/string
-
-// fn parse_line(input) {
-//   use a <- result.map(regex.compile(
-//     "mul\\((\\d{1,3}),\\s*(\\d{1,3})\\)",
-//     regex.Options(case_insensitive: True, multi_line: False),
-//   ))
-//   list.map(regex.scan(a, input), fn(match) {
-//     let assert Match(submatches: [Some(name), Some(left)], ..) = match
-//     #(result.unwrap(int.parse(name), 0), result.unwrap(int.parse(left), 0))
-//   })
-// }
 
 fn parse_line(input, need_filter) {
   let assert Ok(re) = regex.from_string("(do\\(\\)|don't\\(\\))")

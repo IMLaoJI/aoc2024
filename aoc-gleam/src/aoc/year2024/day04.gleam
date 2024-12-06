@@ -1,11 +1,9 @@
 import aoc/util/array2d
-import aoc/util/re
-import aoc/util/str
+
 import gleam/dict
-import gleam/int
-import gleam/io
+
 import gleam/list
-import gleam/regexp
+
 import gleam/result
 import gleam/string
 
@@ -25,7 +23,7 @@ fn solution_part_one(array, dict) {
       fn(sum, y) {
         list.fold(get_directions(), sum, fn(sub_acc, dir) {
           let acc =
-            list.fold(list.range(0, 2), [#(x, y)], fn(acc, r) {
+            list.fold(list.range(0, 2), [#(x, y)], fn(acc, _) {
               list.append(acc, [
                 vadd(dir, result.unwrap(list.last(acc), #(0, 0))),
               ])

@@ -1,13 +1,8 @@
-import aoc/util/re
 import aoc/util/str
-import gleam/int
 import gleam/list
-import gleam/regexp
-import gleam/result
-import gleam/string
 
 fn parse_line(line: String) {
-  todo
+  line
 }
 
 pub fn part1(input: String) -> Int {

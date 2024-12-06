@@ -1,13 +1,12 @@
 import aoc/util/fun
-import aoc/util/re
-import aoc/util/str
+
 import gleam/bool
 import gleam/int
-import gleam/io
+
 import gleam/list
 import gleam/option.{Some}
 import gleam/pair
-import gleam/regex.{type Match, Match}
+import gleam/regex.{type Match}
 import gleam/result
 import gleam/string
 

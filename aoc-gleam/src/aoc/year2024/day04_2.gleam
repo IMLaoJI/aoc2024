@@ -1,11 +1,9 @@
 import aoc/util/grid.{type Grid, type Point, type Word, Point, directions}
-import aoc/util/re
-import aoc/util/str
+
 import gleam/dict
-import gleam/int
-import gleam/io
+
 import gleam/list
-import gleam/regexp
+
 import gleam/result
 import gleam/string
 

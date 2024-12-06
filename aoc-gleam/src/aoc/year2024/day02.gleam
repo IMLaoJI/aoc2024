@@ -1,4 +1,3 @@
-import aoc/util/fun
 import aoc/util/str
 import gleam/bool
 import gleam/int
@@ -9,7 +8,6 @@ import gleam/string
 /// Checks if a list of levels is safe  
 fn is_safe(levels: List(Int)) -> Bool {
   let increments = list.zip(levels, list.drop(levels, 1))
-  io.debug(increments)
   let diffs = list.map(increments, fn(t) { t.0 - t.1 })
   let all_increasing = list.all(diffs, fn(diff) { diff >= -3 && diff <= -1 })
   let all_decreasing = list.all(diffs, fn(diff) { diff >= 1 && diff <= 3 })
@@ -53,12 +51,4 @@ pub fn part2(input: String) -> Int {
   |> parse_line
   |> list.filter(is_safe_with_dampener)
   |> list.length
-}
-
-fn is_safe_at_any_speed(ns: List(Int)) -> Bool {
-  use <- bool.guard(is_safe(ns), True)
-  let indexed = list.index_map(ns, fn(x, i) { #(i, x) })
-  use n <- list.any(list.range(0, list.length(ns) - 1))
-  let assert Ok(#(_, remaining)) = list.key_pop(indexed, n)
-  remaining |> list.map(fn(pair) { pair.1 }) |> is_safe
 }

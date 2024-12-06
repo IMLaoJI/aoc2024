@@ -1,12 +1,11 @@
 import aoc/util/constant.{get_directions}
-import aoc/util/re
+
 import aoc/util/str
 import gleam/bool
 import gleam/dict
-import gleam/int
+
 import gleam/list
-import gleam/regexp
-import gleam/result
+
 import gleam/string
 
 fn parse(line: String) {

@@ -1,4 +1,9 @@
+import birl
+import birl/duration
+import gleam/int
+import gleam/io
 import gleam/list
+import gleam/string
 
 pub type FixFn1(a, b) =
   fn(fn(a) -> b, a) -> b
@@ -67,4 +72,33 @@ pub fn index_find_loop(
 
 pub fn product_tuple(tuple: List(#(Int, Int))) -> Int {
   list.fold(tuple, 0, fn(accum, mul) { accum + { mul.0 * mul.1 } })
+}
+
+// 定义一个计算执行时间的函数
+pub fn measure_time(func) {
+  let new_ts = birl.now()
+  let result = func()
+  let end_ts = birl.now()
+  let end_micro = birl.to_unix_micro(end_ts)
+  let start_micro = birl.to_unix_micro(new_ts)
+  let microseconds = end_micro - start_micro
+  let mills = duration_to_milliseconds(end_micro - start_micro)
+  let seconds = duration_to_seconds(end_micro - start_micro)
+  let line =
+    " Second: "
+    <> int.to_string(seconds)
+    <> " MilliSecond: "
+    <> int.to_string(mills)
+    <> " MicroSecond: "
+    <> int.to_string(microseconds)
+  io.debug(line)
+  result
+}
+
+fn duration_to_milliseconds(microseconds: Int) -> Int {
+  microseconds / 1000
+}
+
+fn duration_to_seconds(microseconds: Int) -> Int {
+  { microseconds / 1000 } / 1000
 }
