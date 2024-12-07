@@ -2,6 +2,7 @@ import aoc/util/array2d.{type Array2D, type Posn, Posn}
 import aoc/util/to.{int, unwrap}
 import gleam/dict.{type Dict}
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/set
@@ -98,45 +99,57 @@ fn build_jump_map(find_array: List(List(String)), map: Array2D(String)) {
   let w = list.length(find_array)
   let h = list.length(unwrap(list.first(find_array)))
   let j =
-    list.fold(list.range(0, h - 1), j, fn(jump_dict, y) {
-      let l = #(Posn(-1, y), Up)
-      let jump_dict =
-        list.fold(list.range(0, w - 1), jump_dict, fn(dict, x) {
+    list.fold(list.range(0, h - 1), j, fn(jump_dict, x) {
+      let l = #(Posn(x, -1), Up)
+
+      let #(jump_dict, _) =
+        list.fold(list.range(0, h - 1), #(jump_dict, l), fn(t, y) {
+          let #(jump_dict, l) = t
           let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-            True -> #(Posn(x + 1, y), Up)
+            True -> #(Posn(x, y + 1), Up)
             False -> l
           }
-          dict.insert(dict, #(x, y, Left), new_l)
+          #(dict.insert(jump_dict, #(x, y, Left), new_l), new_l)
         })
-      let l = #(Posn(w, y), Down)
-      list.fold(list.reverse(list.range(0, w - 1)), jump_dict, fn(dict, x) {
-        let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-          True -> #(Posn(x - 1, y), Down)
-          False -> l
-        }
-        dict.insert(dict, #(x, y, Right), new_l)
-      })
+      let l = #(Posn(x, w), Down)
+      let #(jump_dict, _) =
+        list.fold(list.reverse(list.range(0, h - 1)), #(jump_dict, l), fn(t, y) {
+          let #(jump_dict, l) = t
+          let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
+            True -> #(Posn(x, y - 1), Down)
+            False -> l
+          }
+          #(dict.insert(jump_dict, #(x, y, Right), new_l), new_l)
+        })
+      jump_dict
     })
 
-  list.fold(list.range(0, w - 1), j, fn(jump_dict, x) {
-    let l = #(Posn(x, -1), Right)
-    let jump_dict =
-      list.fold(list.range(0, h - 1), jump_dict, fn(dict, y) {
-        let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-          True -> #(Posn(x, y + 1), Right)
-          False -> l
-        }
-        dict.insert(dict, #(x, y, Up), new_l)
-      })
-    let l = #(Posn(x, h), Left)
-    list.fold(list.reverse(list.range(0, h - 1)), jump_dict, fn(dict, y) {
-      let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-        True -> #(Posn(x, y - 1), Left)
-        False -> l
-      }
-      dict.insert(dict, #(x, y, Down), new_l)
+  let jump_dict =
+    list.fold(list.range(0, w - 1), j, fn(jump_dict, y) {
+      let l = #(Posn(-1, y), Right)
+      let #(jump_dict, _) =
+        list.fold(list.range(0, h - 1), #(jump_dict, l), fn(t, x) {
+          let #(jump_dict, l) = t
+          let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
+            True -> #(Posn(x + 1, y), Right)
+            False -> l
+          }
+          #(dict.insert(jump_dict, #(x, y, Up), new_l), new_l)
+        })
+      let l = #(Posn(h, y), Left)
+
+      let #(jump_dict, _) =
+        list.fold(list.reverse(list.range(0, h - 1)), #(jump_dict, l), fn(t, x) {
+          let #(jump_dict, l) = t
+          let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
+            True -> #(Posn(x - 1, y), Left)
+            False -> l
+          }
+          #(dict.insert(jump_dict, #(x, y, Down), new_l), new_l)
+        })
+      jump_dict
     })
-  })
+  jump_dict
 }
 
 pub fn count(
@@ -163,6 +176,7 @@ pub fn count(
                 current_direction,
               )),
             )
+
           count(
             candidate,
             find_dict,
@@ -191,13 +205,13 @@ pub fn count(
           )
         }
       }
-      1
     }
-    False ->
+    False -> {
       case set.contains(visisted, #(current_point, current_direction)) {
         True -> 1
         False -> 0
       }
+    }
   }
 }
 
