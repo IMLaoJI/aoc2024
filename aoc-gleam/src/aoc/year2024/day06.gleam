@@ -2,6 +2,7 @@ import aoc/util/array2d.{type Array2D, type Posn, Posn}
 import aoc/util/to.{int}
 import gleam/dict.{type Dict}
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/result
 import parallel_map
@@ -29,7 +30,10 @@ fn patrol(
     dict.has_key(visited, #(pos, direction))
     && result.unwrap(dict.get(visited, #(pos, direction)), Up) == direction
   {
-    True -> #(False, dict.new())
+    True -> {
+      io.debug(pos)
+      #(False, dict.new())
+    }
     False -> {
       let visited = dict.insert(visited, #(pos, direction), direction)
       let assert Ok(first) = list.first(find_array)
