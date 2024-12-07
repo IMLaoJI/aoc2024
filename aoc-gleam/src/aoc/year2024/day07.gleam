@@ -30,62 +30,57 @@ fn concatenate(a: Int, b: Int) -> Int {
   result
 }
 
-fn valid(frontier, numbers, answer, need_concat, visited) {
-  let assert Ok(#(current, index)) = list.last(frontier)
-  let pop_later =
-    list.reverse(result.unwrap(list.rest(list.reverse(frontier)), []))
+pub type Problem {
+  Problem(answer: Int, parts: List(Int))
+}
 
-  case list.length(numbers) - 1 == index && current == answer {
-    True -> {
-      True
-    }
-    False -> {
-      case list.length(numbers) - 1 > index {
-        True -> {
-          let next = to.unwrap(list.first(list.drop(numbers, index + 1)))
-          let frontier =
-            list.append(pop_later, [
-              #(current + next, index + 1),
-              #(current * next, index + 1),
-            ])
+pub type Op {
+  Add
+  Multiply
+  Concatenate
+}
 
-          let concat = to.int(int.to_string(current) <> int.to_string(next))
-          let frontier = case need_concat {
-            True -> list.append(frontier, [#(concat, index + 1)])
-            False -> frontier
-          }
-          let visited = list.append(visited, [concat])
-          valid(frontier, numbers, answer, need_concat, visited)
-        }
-        False -> {
-          use <- bool.guard(list.is_empty(pop_later), False)
-          valid(pop_later, numbers, answer, need_concat, visited)
-        }
-      }
+fn do_op(op, a, b) {
+  case op {
+    Add -> a + b
+    Multiply -> a * b
+    Concatenate -> concatenate(a, b)
+  }
+}
+
+fn check_problem(problem, ops: List(Op)) -> Result(Int, Nil) {
+  case problem {
+    #(answer, [a]) if a == answer -> Ok(a)
+    #(answer, [a, b, ..rest]) -> {
+      list.find_map(ops, fn(op) {
+        let parts = [do_op(op, a, b), ..rest]
+        check_problem(#(answer, parts), ops)
+      })
     }
+    _ -> Error(Nil)
+  }
+}
+
+fn add_up_true_equations(input, operators) {
+  use acc, problem <- list.fold(input, 0)
+  case check_problem(problem, operators) {
+    Ok(n) -> n + acc
+    _ -> acc
   }
 }
 
 pub fn part1(input: String) -> Int {
-  input
-  |> str.lines
-  |> list.map(parse_line)
-  |> list.filter(fn(t) {
-    let #(ans, numbers) = t
-    let frontier = [#(to.unwrap(list.first(numbers)), 0)]
-    valid(frontier, numbers, ans, False, [])
-  })
-  |> list.fold(0, fn(acc, t) { acc + t.0 })
+  let problems =
+    input
+    |> str.lines
+    |> list.map(parse_line)
+  add_up_true_equations(problems, [Add, Multiply])
 }
 
 pub fn part2(input: String) -> Int {
-  input
-  |> str.lines
-  |> list.map(parse_line)
-  |> list.filter(fn(t) {
-    let #(ans, numbers) = t
-    let frontier = [#(to.unwrap(list.first(numbers)), 0)]
-    valid(frontier, numbers, ans, True, [])
-  })
-  |> list.fold(0, fn(acc, t) { acc + t.0 })
+  let problems =
+    input
+    |> str.lines
+    |> list.map(parse_line)
+  add_up_true_equations(problems, [Add, Multiply, Concatenate])
 }
