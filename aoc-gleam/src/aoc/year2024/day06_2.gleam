@@ -2,6 +2,7 @@ import aoc/util/array2d.{type Array2D, type Posn, Posn}
 import aoc/util/to.{int, unwrap}
 import gleam/dict.{type Dict}
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/set
@@ -99,19 +100,20 @@ fn build_jump_map(find_array: List(List(String)), map: Array2D(String)) {
   let h = list.length(unwrap(list.first(find_array)))
   let j =
     list.fold(list.range(0, h - 1), j, fn(jump_dict, y) {
-      let l = #(Posn(-1, y), Up)
+      let l = #(Posn(-1, y), Left)
       let jump_dict =
         list.fold(list.range(0, w - 1), jump_dict, fn(dict, x) {
           let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-            True -> #(Posn(x + 1, y), Up)
+            True -> #(Posn(x - 1, y), Left)
             False -> l
           }
-          dict.insert(dict, #(x, y, Left), new_l)
+          io.debug(#(#(x, y, Up), new_l))
+          dict.insert(dict, #(x, y, Up), new_l)
         })
       let l = #(Posn(w, y), Down)
       list.fold(list.reverse(list.range(0, w - 1)), jump_dict, fn(dict, x) {
         let new_l = case unwrap(dict.get(map, Posn(x, y))) == "#" {
-          True -> #(Posn(x - 1, y), Down)
+          True -> #(Posn(x + 1, y), Down)
           False -> l
         }
         dict.insert(dict, #(x, y, Right), new_l)

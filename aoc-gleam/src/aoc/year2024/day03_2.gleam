@@ -4,9 +4,7 @@ import gleam/bool
 import gleam/int
 
 import gleam/list
-import gleam/option.{Some}
 import gleam/pair
-import gleam/regex.{type Match}
 import gleam/result
 import gleam/string
 

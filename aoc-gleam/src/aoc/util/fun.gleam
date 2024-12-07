@@ -1,9 +1,7 @@
 import birl
-import birl/duration
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/string
 
 pub type FixFn1(a, b) =
   fn(fn(a) -> b, a) -> b
