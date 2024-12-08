@@ -1,14 +1,8 @@
-import aoc/util/array2d.{type Array2D, type Posn, Posn}
 import aoc/util/str
 import aoc/util/to
-import gleam/bool
-import gleam/dict.{type Dict}
 import gleam/int
-import gleam/io
 import gleam/list
-import gleam/result
 import gleam/string
-import parallel_map
 
 fn parse_line(line: String) {
   let assert [first, num] =
@@ -28,10 +22,6 @@ fn concatenate(a: Int, b: Int) -> Int {
   let assert Ok(b_digits) = int.digits(b, 10)
   let assert Ok(result) = list.append(a_digits, b_digits) |> int.undigits(10)
   result
-}
-
-pub type Problem {
-  Problem(answer: Int, parts: List(Int))
 }
 
 pub type Op {

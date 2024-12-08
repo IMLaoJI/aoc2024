@@ -2,7 +2,6 @@ import aoc/util/array2d.{type Array2D, type Posn, Posn}
 import aoc/util/to.{int, unwrap}
 import gleam/dict.{type Dict}
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/set

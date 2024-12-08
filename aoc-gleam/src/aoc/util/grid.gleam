@@ -1,4 +1,6 @@
 import gleam/dict.{type Dict}
+import gleam/list
+import gleam/string
 
 pub type Point {
   Point(x: Int, y: Int)
@@ -33,3 +35,21 @@ pub type Grid(data) =
 /// A word is a list of points, which can be used to look up the letter
 pub type Word =
   List(Point)
+
+pub fn go(coord: Point, direction: Point) {
+  Point(coord.x + direction.x, coord.y + direction.y)
+}
+
+pub fn dist(a: Point, b: Point) -> Point {
+  Point(b.x - a.x, b.y - a.y)
+}
+
+pub fn grid(input: String, parser: fn(String) -> a) -> Dict(Point, a) {
+  {
+    use row, r <- list.index_map(string.split(input, "\r\n"))
+    use col, c <- list.index_map(string.to_graphemes(row))
+    #(Point(r, c), parser(col))
+  }
+  |> list.flatten
+  |> dict.from_list
+}

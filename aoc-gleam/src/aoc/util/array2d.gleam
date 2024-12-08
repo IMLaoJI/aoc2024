@@ -17,6 +17,12 @@ pub fn add_posns(p1: Posn, p2: Posn) -> Posn {
   }
 }
 
+pub fn offset_posns(p1: Posn, p2: Posn) -> Posn {
+  case p1, p2 {
+    Posn(r1, c1), Posn(r2, c2) -> Posn(r2 - r1, c2 - c1)
+  }
+}
+
 pub fn ortho_neighbors(p: Posn) -> List(Posn) {
   let Posn(r, c) = p
   [Posn(r + 1, c), Posn(r - 1, c), Posn(r, c + 1), Posn(r, c - 1)]
@@ -43,6 +49,19 @@ pub fn to_2d_array_using(
   |> dict.from_list
 }
 
+pub fn to_list_using(xss: List(List(a)), f: fn(a) -> Result(b, Nil)) {
+  {
+    use row, r <- list.index_map(xss)
+    use cell, c <- list.index_map(row)
+    case f(cell) {
+      Ok(contents) -> Ok(#(Posn(r, c), contents))
+      Error(Nil) -> Error(Nil)
+    }
+  }
+  |> list.flatten
+  |> result.values
+}
+
 pub fn to_2d_intarray(xss: List(List(String))) -> Array2D(Int) {
   {
     use row, r <- list.index_map(xss)
@@ -64,6 +83,16 @@ pub fn to_list_of_lists(str: String) -> List(List(String)) {
 
 pub fn parse_grid(str: String) -> Array2D(String) {
   parse_grid_using(str, fn(x) { Ok(x) })
+}
+
+pub fn parse_grid_list(str: String) {
+  parse_grid_using_list(str, fn(x) { Ok(x) })
+}
+
+pub fn parse_grid_using_list(str: String, f: fn(String) -> Result(a, Nil)) {
+  str
+  |> to_list_of_lists
+  |> to_list_using(f)
 }
 
 pub fn parse_grid_using(
