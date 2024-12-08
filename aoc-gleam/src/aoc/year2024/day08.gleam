@@ -37,8 +37,8 @@ pub fn find_antiantenas(find_array, find_dict, need_much) {
             [],
           ),
         )
-        |> list.append(set.to_list(antennas))
         |> set.from_list
+        |> set.union(antennas)
       }
       False -> {
         set.insert(

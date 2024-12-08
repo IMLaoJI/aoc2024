@@ -13,6 +13,7 @@ import aoc/year2024/day06
 import aoc/year2024/day06_2
 import aoc/year2024/day07
 import aoc/year2024/day07_2
+import aoc/year2024/day07_3
 import aoc/year2024/day08
 import aoc/year2024/day08_2
 import gleam/string
@@ -49,6 +50,8 @@ pub fn run(input: String, day: Int, part: Int) {
     7, 2 -> input |> day07.part2 |> string.inspect
     7, 11 -> input |> day07_2.part1 |> string.inspect
     7, 22 -> input |> day07_2.part2 |> string.inspect
+    7, 111 -> input |> day07_3.part1 |> string.inspect
+    7, 222 -> input |> day07_3.part2 |> string.inspect
     8, 1 -> input |> day08.part1 |> string.inspect
     8, 2 -> input |> day08.part2 |> string.inspect
     8, 11 -> input |> day08_2.part1 |> string.inspect

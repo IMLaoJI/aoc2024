@@ -34,6 +34,7 @@ fn do(input, acc, test_val, ops) -> Bool {
 pub fn part1(input: String) -> Int {
   use acc, #(test_val, args) <- list.fold(input |> parse, 0)
   let assert [first, ..rest] = args
+
   case do(rest, first, test_val, [int.add, int.multiply]) {
     True -> acc + test_val
     False -> acc
