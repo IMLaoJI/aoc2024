@@ -1,5 +1,4 @@
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -56,13 +55,6 @@ pub fn part2(input: String) -> Int {
     }
     False -> acc
   }
-}
-
-fn concat(front: Int, back: Int) -> Int {
-  let assert Ok(front) = int.digits(front, 10)
-  let assert Ok(back) = int.digits(back, 10)
-  let assert Ok(smushed) = list.flatten([front, back]) |> int.undigits(10)
-  smushed
 }
 
 fn is_solvable2(result: Int, numbers) {

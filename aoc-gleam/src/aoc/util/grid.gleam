@@ -40,8 +40,16 @@ pub fn go(coord: Point, direction: Point) {
   Point(coord.x + direction.x, coord.y + direction.y)
 }
 
+pub fn sub(coord: Point, direction: Point) {
+  Point(coord.x - direction.x, coord.y - direction.y)
+}
+
 pub fn dist(a: Point, b: Point) -> Point {
   Point(b.x - a.x, b.y - a.y)
+}
+
+pub fn negate(v: Point) -> Point {
+  Point(-v.x, -v.y)
 }
 
 pub fn grid(input: String, parser: fn(String) -> a) -> Dict(Point, a) {
