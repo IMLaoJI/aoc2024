@@ -1,25 +1,21 @@
-import aoc/util/str
+import aoc/util/fun
 import aoc/util/to
-import gleam/bool
+
 import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/order
+
 import gleam/result
 import gleam/set
 import gleam/string
-
-fn parse_line(line: String) {
-  line
-}
 
 fn is_have_gap(row) {
   let li = list.drop_while(row, fn(p) { p != "." })
   list.length(li) != list.count(row, fn(p) { p == "." })
 }
 
-fn is_over(find_dict, row, visited) {
+fn is_over(find_dict, _, visited) {
   set.size(visited) == dict.size(find_dict)
 }
 
@@ -29,7 +25,6 @@ fn replace(row) {
       let assert Ok(last) = list.last(row)
       let new_row = case last != "." {
         True -> {
-          io.debug(last)
           let new_row =
             list.take_while(row, fn(p) { p != "." })
             |> list.append([last])
@@ -48,58 +43,98 @@ fn replace(row) {
 
 fn replace_2(row, visited, valid_idx) {
   let #(find_dict, freq_list) = group(row)
-  let assert Ok(last) = list.last(list.take(row, valid_idx + 3))
-  case !is_over(find_dict, row, visited) && valid_idx > 0 {
+  let new_dict = set.difference(set.from_list(dict.keys(find_dict)), visited)
+  let assert Ok(last) = list.last(set.to_list(new_dict))
+  io.debug(last)
+  case valid_idx > 0 && set.size(new_dict) > 0 {
     True -> {
-      let assert Ok(last) = list.last(list.take(row, valid_idx + 1))
-      let is_number = result.is_ok(int.parse(last))
-      let #(new_row, new_valid_idx) = case
-        last != "." && !set.contains(visited, last)
-      {
+      let assert Ok(last) = list.last(set.to_list(new_dict))
+      let assert Ok(last2) = list.last(list.take(row, valid_idx + 1))
+      io.debug(last)
+      case set.contains(visited, last2) && last != last2 {
         True -> {
-          let number_size = list.length(to.unwrap(dict.get(find_dict, last)))
-          let find_element =
-            list.find(freq_list, fn(p) {
-              valid_idx >= p.0 && p.1 >= number_size
-            })
-          case find_element {
-            Ok(nu) -> {
-              let new_row =
-                list.take(row, nu.0)
-                |> list.append(list.repeat(last, number_size))
-                |> list.append(
-                  to.unwrap(list.rest(list.drop(row, nu.0 + number_size - 1))),
-                )
-              let new_row =
-                list.take(new_row, valid_idx - number_size + 1)
-                |> list.append(list.repeat(".", number_size))
-                |> list.append(list.drop(new_row, valid_idx + 1))
-              #(new_row, valid_idx - number_size)
+          replace_2(
+            row,
+            visited,
+            list.length(list.take_while(row, fn(p) { p != last })),
+          )
+        }
+        False -> {
+          let is_number = result.is_ok(int.parse(last))
+          let #(new_row, new_valid_idx) = case
+            last != "." && !set.contains(visited, last)
+          {
+            True -> {
+              let number_size =
+                list.length(to.unwrap(dict.get(find_dict, last)))
+              let find_element =
+                list.find(freq_list, fn(p) {
+                  valid_idx >= p.0 && p.1 >= number_size
+                })
+              case find_element {
+                Ok(nu) -> {
+                  let new_row =
+                    list.take(row, nu.0)
+                    |> list.append(list.repeat(last, number_size))
+                    |> list.append(
+                      to.unwrap(
+                        list.rest(list.drop(row, nu.0 + number_size - 1)),
+                      ),
+                    )
+                  let new_row =
+                    list.take(new_row, valid_idx - number_size + 1)
+                    |> list.append(list.repeat(".", number_size))
+                    |> list.append(list.drop(new_row, valid_idx + 1))
+
+                  case
+                    list.find(freq_list, fn(p) {
+                      { p.0 } == valid_idx - number_size
+                    })
+                  {
+                    Ok(idx) -> {
+                      #(new_row, valid_idx - number_size - idx.1)
+                    }
+                    Error(_) -> {
+                      #(new_row, valid_idx - number_size)
+                    }
+                  }
+                }
+                Error(_) -> {
+                  case
+                    list.find(freq_list, fn(p) {
+                      { p.0 } == valid_idx - number_size
+                    })
+                  {
+                    Ok(idx) -> {
+                      #(row, valid_idx - number_size - idx.1)
+                    }
+                    Error(_) -> {
+                      #(row, valid_idx - number_size)
+                    }
+                  }
+                }
+              }
             }
-            Error(_) -> {
-              #(row, valid_idx - number_size)
+            False -> {
+              // case list.find(freq_list, fn(p) { { p.0 + p.1 } > valid_idx }) {
+              //   Ok(idx) -> {
+              //     #(row, idx.0 - 1)
+              //   }
+              //   Error(_) -> {
+              //     #(row, valid_idx - 1)
+              //   }
+              // }
+              #(row, valid_idx - 1)
             }
           }
-        }
-        False -> {
-          io.debug(valid_idx - 1)
-          // case list.find(freq_list, fn(p) { { p.0 + p.1 } > valid_idx }) {
-          //   Ok(idx) -> {
-          //     #(row, idx.0 - 1)
-          //   }
-          //   Error(_) -> {
-          //     #(row, valid_idx - 1)
-          //   }
-          // }
-          #(row, valid_idx - 1)
-        }
-      }
-      case is_number {
-        True -> {
-          replace_2(new_row, set.insert(visited, last), new_valid_idx)
-        }
-        False -> {
-          replace_2(new_row, visited, new_valid_idx)
+          case is_number {
+            True -> {
+              replace_2(new_row, set.insert(visited, last), new_valid_idx)
+            }
+            False -> {
+              replace_2(new_row, visited, new_valid_idx)
+            }
+          }
         }
       }
     }
@@ -113,16 +148,20 @@ fn group(input) {
     |> list.filter(fn(p) { p != "." })
     |> list.group(fn(p) { p })
 
-  let #(is_dot, deal_dict, dot_idx, dot_num) =
+  let #(_, deal_dict, _, _) =
     list.index_fold(input, #(False, dict.new(), -1, 0), fn(acc, item, idx) {
       let #(is_dot, deal_dict, dot_idx, dot_num) = acc
       let is_number = result.is_ok(int.parse(item))
+      let end = idx == { list.length(input) - 1 }
       case item, is_dot {
         ".", False -> {
           #(True, deal_dict, idx, dot_num + 1)
         }
         _, True if is_number -> {
           #(False, dict.insert(deal_dict, dot_idx, dot_num), idx, 0)
+        }
+        _, True if end -> {
+          #(False, dict.insert(deal_dict, dot_idx, dot_num + 1), idx, 0)
         }
         _, True -> {
           #(True, deal_dict, dot_idx, dot_num + 1)

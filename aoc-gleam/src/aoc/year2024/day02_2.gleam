@@ -1,7 +1,6 @@
 import gleam/int
 import gleam/list
 import gleam/string
-import gleam/yielder
 
 pub fn parse(input) {
   use line <- list.filter_map(string.split(input, on: "\r\n"))

@@ -38,7 +38,6 @@ fn do_parse(input: String, state: State, file_index: Int, acc: List(Block)) {
 }
 
 fn replace(current: List(Block), movable: List(Block), acc: List(Block)) {
-  io.debug(#(current, movable, acc))
   case current, movable {
     remaining, [] -> list.append(list.reverse(acc), remaining)
     [FreeSpace, ..rest], [move, ..rest_to_move] ->
@@ -49,7 +48,6 @@ fn replace(current: List(Block), movable: List(Block), acc: List(Block)) {
 }
 
 pub fn pt_1(input: List(Block)) {
-  io.debug(input)
   let free_spaces = list.count(input, fn(b) { b == FreeSpace })
   let filled_spaces = list.length(input) - free_spaces
   let steps =
@@ -76,6 +74,7 @@ pub fn pt_1(input: List(Block)) {
 fn find_free_space(drive, files) {
   use <- bool.guard(list.is_empty(files), drive)
   let assert [File(size, id) as next, ..rest_files] = files
+  io.debug(id)
   let drive_parts =
     list.split_while(drive, fn(f) {
       case f {
@@ -84,15 +83,18 @@ fn find_free_space(drive, files) {
         _ -> True
       }
     })
-
   case drive_parts {
-    #(_, [File(_, _), ..]) | #(_no_split, []) ->
+    #(_, [File(_, _), ..]) | #(_no_split, []) -> {
+      // io.debug("3")
       find_free_space(drive, rest_files)
+    }
     #(first, [FreeSpan(free_size), ..rest]) if free_size == size -> {
+      // io.debug("1")
       let after_move = collapse_free_space(rest, next, [])
       find_free_space(list.flatten([first, [next], after_move]), rest_files)
     }
     #(first, [FreeSpan(free_size), ..rest]) -> {
+      // io.debug("2")
       let after_move = collapse_free_space(rest, next, [])
       find_free_space(
         list.flatten([first, [next, FreeSpan(free_size - size)], after_move]),
@@ -104,15 +106,27 @@ fn find_free_space(drive, files) {
 
 fn collapse_free_space(drive: List(File), moved: File, acc) {
   case drive {
-    [FreeSpan(a), f, FreeSpan(b), ..rest] if moved == f ->
+    [FreeSpan(a), f, FreeSpan(b), ..rest] if moved == f -> {
+      // io.debug(#("12", a, b, f, rest))
       list.flatten([list.reverse(acc), [FreeSpan(a + f.size + b)], rest])
-    [FreeSpan(a), f, ..rest] if moved == f ->
+    }
+    [FreeSpan(a), f, ..rest] if moved == f -> {
+      // io.debug(#("13", a, f, rest))
       list.flatten([list.reverse(acc), [FreeSpan(a + f.size)], rest])
-    [f, FreeSpan(b), ..rest] if moved == f ->
+    }
+    [f, FreeSpan(b), ..rest] if moved == f -> {
+      // io.debug(#("14", b, f, rest))
       list.flatten([list.reverse(acc), [FreeSpan(f.size + b)], rest])
-    [f, ..rest] if moved == f ->
+    }
+    [f, ..rest] if moved == f -> {
+      // io.debug(#("15", f, rest))
       list.flatten([list.reverse(acc), [FreeSpan(f.size)], rest])
-    [other, ..rest] -> collapse_free_space(rest, moved, [other, ..acc])
+    }
+
+    [other, ..rest] -> {
+      // io.debug(#("16", other, rest))
+      collapse_free_space(rest, moved, [other, ..acc])
+    }
     [] -> list.reverse(acc)
   }
 }
@@ -138,7 +152,6 @@ pub fn pt_2(input: List(Block)) {
         _ -> False
       }
     })
-
   find_free_space(drive, files)
   |> list.flat_map(fn(f) {
     case f {

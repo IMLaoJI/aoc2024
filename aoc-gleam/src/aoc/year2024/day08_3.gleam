@@ -1,6 +1,5 @@
-import aoc/util/grid.{type Grid, type Point, type Word, Point, directions}
+import aoc/util/grid.{type Point, Point}
 import gleam/dict
-import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option
