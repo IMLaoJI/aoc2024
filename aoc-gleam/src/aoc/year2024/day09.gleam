@@ -41,11 +41,8 @@ fn replace(row) {
   }
 }
 
-fn replace_2(row, visited, valid_idx) {
-  let #(find_dict, freq_list) = group(row)
+fn replace_2(row, find_dict, freq_list: List(#(Int, Int)), visited, valid_idx) {
   let new_dict = set.difference(set.from_list(dict.keys(find_dict)), visited)
-  let assert Ok(last) = list.last(set.to_list(new_dict))
-  io.debug(last)
   case valid_idx > 0 && set.size(new_dict) > 0 {
     True -> {
       let assert Ok(last) = list.last(set.to_list(new_dict))
@@ -55,13 +52,15 @@ fn replace_2(row, visited, valid_idx) {
         True -> {
           replace_2(
             row,
+            find_dict,
+            freq_list,
             visited,
             list.length(list.take_while(row, fn(p) { p != last })),
           )
         }
         False -> {
           let is_number = result.is_ok(int.parse(last))
-          let #(new_row, new_valid_idx) = case
+          let #(new_row, new_valid_idx, new_freq_list) = case
             last != "." && !set.contains(visited, last)
           {
             True -> {
@@ -81,6 +80,14 @@ fn replace_2(row, visited, valid_idx) {
                         list.rest(list.drop(row, nu.0 + number_size - 1)),
                       ),
                     )
+
+                  let new_freq_list =
+                    list.map(freq_list, fn(p) {
+                      case p.0 == nu.0 {
+                        True -> #(nu.0 + number_size, nu.1 - number_size)
+                        False -> p
+                      }
+                    })
                   let new_row =
                     list.take(new_row, valid_idx - number_size + 1)
                     |> list.append(list.repeat(".", number_size))
@@ -92,10 +99,10 @@ fn replace_2(row, visited, valid_idx) {
                     })
                   {
                     Ok(idx) -> {
-                      #(new_row, valid_idx - number_size - idx.1)
+                      #(new_row, valid_idx - number_size - idx.1, new_freq_list)
                     }
                     Error(_) -> {
-                      #(new_row, valid_idx - number_size)
+                      #(new_row, valid_idx - number_size, new_freq_list)
                     }
                   }
                 }
@@ -106,10 +113,10 @@ fn replace_2(row, visited, valid_idx) {
                     })
                   {
                     Ok(idx) -> {
-                      #(row, valid_idx - number_size - idx.1)
+                      #(row, valid_idx - number_size - idx.1, freq_list)
                     }
                     Error(_) -> {
-                      #(row, valid_idx - number_size)
+                      #(row, valid_idx - number_size, freq_list)
                     }
                   }
                 }
@@ -124,15 +131,27 @@ fn replace_2(row, visited, valid_idx) {
               //     #(row, valid_idx - 1)
               //   }
               // }
-              #(row, valid_idx - 1)
+              #(row, valid_idx - 1, freq_list)
             }
           }
           case is_number {
             True -> {
-              replace_2(new_row, set.insert(visited, last), new_valid_idx)
+              replace_2(
+                new_row,
+                find_dict,
+                new_freq_list,
+                set.insert(visited, last),
+                new_valid_idx,
+              )
             }
             False -> {
-              replace_2(new_row, visited, new_valid_idx)
+              replace_2(
+                new_row,
+                find_dict,
+                new_freq_list,
+                visited,
+                new_valid_idx,
+              )
             }
           }
         }
@@ -147,7 +166,6 @@ fn group(input) {
     input
     |> list.filter(fn(p) { p != "." })
     |> list.group(fn(p) { p })
-
   let #(_, deal_dict, _, _) =
     list.index_fold(input, #(False, dict.new(), -1, 0), fn(acc, item, idx) {
       let #(is_dot, deal_dict, dot_idx, dot_num) = acc
@@ -216,8 +234,14 @@ pub fn part2(input: String) -> Int {
   let parse_input =
     input
     |> parse
-
-  replace_2(parse_input, set.new(), list.length(parse_input) - 1)
+  let #(find_dict, freq_list) = fun.measure_time(fn() { group(parse_input) })
+  replace_2(
+    parse_input,
+    find_dict,
+    freq_list,
+    set.new(),
+    list.length(parse_input) - 1,
+  )
   |> list.index_fold(0, fn(acc, item, idx) {
     case int.parse(item) {
       Ok(nu) -> acc + { nu * idx }
