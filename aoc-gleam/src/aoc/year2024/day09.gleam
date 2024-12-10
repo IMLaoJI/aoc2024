@@ -1,3 +1,4 @@
+/// bad solution  can't get right answer
 import aoc/util/fun
 import aoc/util/to
 
@@ -13,10 +14,6 @@ import gleam/string
 fn is_have_gap(row) {
   let li = list.drop_while(row, fn(p) { p != "." })
   list.length(li) != list.count(row, fn(p) { p == "." })
-}
-
-fn is_over(find_dict, _, visited) {
-  set.size(visited) == dict.size(find_dict)
 }
 
 fn replace(row) {
@@ -41,13 +38,20 @@ fn replace(row) {
   }
 }
 
-fn replace_2(row, find_dict, freq_list: List(#(Int, Int)), visited, valid_idx) {
+fn replace_2(
+  row,
+  find_dict,
+  freq_list: List(#(Int, Int)),
+  visited,
+  valid_idx,
+  sorted_list,
+) {
   let new_dict = set.difference(set.from_list(dict.keys(find_dict)), visited)
   case valid_idx > 0 && set.size(new_dict) > 0 {
     True -> {
-      let assert Ok(last) = list.last(set.to_list(new_dict))
+      // let assert Ok(last) = list.last(set.to_list(new_dict))
+      let assert Ok(last) = list.last(sorted_list)
       let assert Ok(last2) = list.last(list.take(row, valid_idx + 1))
-      io.debug(last)
       case set.contains(visited, last2) && last != last2 {
         True -> {
           replace_2(
@@ -56,6 +60,7 @@ fn replace_2(row, find_dict, freq_list: List(#(Int, Int)), visited, valid_idx) {
             freq_list,
             visited,
             list.length(list.take_while(row, fn(p) { p != last })),
+            sorted_list,
           )
         }
         False -> {
@@ -88,6 +93,20 @@ fn replace_2(row, find_dict, freq_list: List(#(Int, Int)), visited, valid_idx) {
                         False -> p
                       }
                     })
+
+                  let a = case last == "9998" {
+                    True -> {
+                      io.debug(
+                        #(list.take(new_row, valid_idx - number_size + 1)),
+                      )
+                      io.debug(list.repeat(".", number_size))
+                      io.debug(list.drop(new_row, valid_idx + 1))
+                      1
+                    }
+                    False -> {
+                      1
+                    }
+                  }
                   let new_row =
                     list.take(new_row, valid_idx - number_size + 1)
                     |> list.append(list.repeat(".", number_size))
@@ -138,19 +157,21 @@ fn replace_2(row, find_dict, freq_list: List(#(Int, Int)), visited, valid_idx) {
             True -> {
               replace_2(
                 new_row,
-                find_dict,
+                dict.delete(find_dict, last),
                 new_freq_list,
                 set.insert(visited, last),
                 new_valid_idx,
+                list.reverse(to.unwrap(list.rest(list.reverse(sorted_list)))),
               )
             }
             False -> {
               replace_2(
                 new_row,
-                find_dict,
+                dict.delete(find_dict, last),
                 new_freq_list,
                 visited,
                 new_valid_idx,
+                list.reverse(to.unwrap(list.rest(list.reverse(sorted_list)))),
               )
             }
           }
@@ -235,17 +256,45 @@ pub fn part2(input: String) -> Int {
     input
     |> parse
   let #(find_dict, freq_list) = fun.measure_time(fn() { group(parse_input) })
-  replace_2(
-    parse_input,
-    find_dict,
-    freq_list,
-    set.new(),
-    list.length(parse_input) - 1,
-  )
-  |> list.index_fold(0, fn(acc, item, idx) {
-    case int.parse(item) {
-      Ok(nu) -> acc + { nu * idx }
-      _ -> acc
-    }
-  })
+
+  let sorted_list =
+    dict.keys(find_dict)
+    |> list.sort(fn(a, b) { int.compare(to.int(a), to.int(b)) })
+  let num =
+    list.length(
+      list.take_while(list.reverse(parse_input), fn(p) {
+        p != to.unwrap(list.last(sorted_list))
+      }),
+    )
+  let res =
+    replace_2(
+      parse_input,
+      find_dict,
+      freq_list,
+      set.new(),
+      list.length(parse_input) - num - 1,
+      sorted_list,
+    )
+    |> list.index_fold(#(0, set.new(), ""), fn(acco, item, idx) {
+      let #(acc, visited, pre) = acco
+      let #(acc, new_set) = case
+        int.parse(item),
+        idx >= 0,
+        !set.contains(visited, item)
+      {
+        Ok(nu), True, True -> {
+          case pre != item && pre != "" {
+            True -> {
+              #(acc + { nu * idx }, set.insert(visited, pre))
+            }
+            False -> {
+              #(acc + { nu * idx }, visited)
+            }
+          }
+        }
+        _, _, _ -> #(acc, visited)
+      }
+      #(acc, new_set, item)
+    })
+  res.0
 }

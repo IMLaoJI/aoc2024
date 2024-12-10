@@ -1,4 +1,5 @@
 import birl
+import gleam/bool
 import gleam/int
 import gleam/io
 import gleam/list
@@ -99,4 +100,12 @@ fn duration_to_milliseconds(microseconds: Int) -> Int {
 
 fn duration_to_seconds(microseconds: Int) -> Int {
   { microseconds / 1000 } / 1000
+}
+
+pub fn get_at(xs: List(a), k: Int) -> Result(a, Nil) {
+  use <- bool.guard(k < 0, Error(Nil))
+  case k {
+    0 -> list.first(xs)
+    k -> get_at(xs, k - 1)
+  }
 }
