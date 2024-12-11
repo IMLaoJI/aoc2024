@@ -47,7 +47,7 @@ fn replace_2(
   sorted_list,
 ) {
   let new_dict = set.difference(set.from_list(dict.keys(find_dict)), visited)
-  case valid_idx > 0 && set.size(new_dict) > 0 {
+  case valid_idx > 0 {
     True -> {
       // let assert Ok(last) = list.last(set.to_list(new_dict))
       let assert Ok(last) = list.last(sorted_list)
@@ -87,20 +87,80 @@ fn replace_2(
                     )
 
                   let new_freq_list =
-                    list.map(freq_list, fn(p) {
-                      case p.0 == nu.0 {
-                        True -> #(nu.0 + number_size, nu.1 - number_size)
-                        False -> p
-                      }
-                    })
+                    list.sort(
+                      list.map(freq_list, fn(p) {
+                        case p.0 == nu.0 {
+                          True -> #(nu.0 + number_size, nu.1 - number_size)
+                          False -> p
+                        }
+                      }),
+                      fn(a, b) { int.compare(a.0, b.0) },
+                    )
 
-                  let a = case last == "9998" {
+                  let a = case last == "9999" {
                     True -> {
                       io.debug(
-                        #(list.take(new_row, valid_idx - number_size + 1)),
+                        #(
+                          list.reverse(list.take(
+                            list.reverse(list.take(
+                              new_row,
+                              valid_idx - number_size + 1,
+                            )),
+                            30,
+                          )),
+                        ),
                       )
                       io.debug(list.repeat(".", number_size))
                       io.debug(list.drop(new_row, valid_idx + 1))
+                      io.debug(#(valid_idx, number_size))
+
+                      1
+                    }
+                    False -> {
+                      1
+                    }
+                  }
+                  let a = case last == "4160" {
+                    True -> {
+                      io.debug(
+                        #(
+                          list.reverse(list.take(
+                            list.reverse(list.take(
+                              new_row,
+                              valid_idx - number_size + 1,
+                            )),
+                            30,
+                          )),
+                        ),
+                      )
+
+                      io.debug(list.repeat(".", number_size))
+                      io.debug(list.drop(new_row, valid_idx + 1))
+                      io.debug(#(valid_idx, number_size))
+
+                      1
+                    }
+                    False -> {
+                      1
+                    }
+                  }
+                  let a = case last == "4158" {
+                    True -> {
+                      io.debug(
+                        #(
+                          list.reverse(list.take(
+                            list.reverse(list.take(
+                              new_row,
+                              valid_idx - number_size + 1,
+                            )),
+                            30,
+                          )),
+                        ),
+                      )
+                      io.debug(list.repeat(".", number_size))
+                      io.debug(list.drop(new_row, valid_idx + 1))
+                      io.debug(#(valid_idx, number_size))
+
                       1
                     }
                     False -> {
@@ -115,6 +175,7 @@ fn replace_2(
                   case
                     list.find(freq_list, fn(p) {
                       { p.0 } == valid_idx - number_size
+                      || { p.0 + p.1 } == valid_idx - number_size + 1
                     })
                   {
                     Ok(idx) -> {
@@ -266,6 +327,7 @@ pub fn part2(input: String) -> Int {
         p != to.unwrap(list.last(sorted_list))
       }),
     )
+
   let res =
     replace_2(
       parse_input,
@@ -277,12 +339,8 @@ pub fn part2(input: String) -> Int {
     )
     |> list.index_fold(#(0, set.new(), ""), fn(acco, item, idx) {
       let #(acc, visited, pre) = acco
-      let #(acc, new_set) = case
-        int.parse(item),
-        idx >= 0,
-        !set.contains(visited, item)
-      {
-        Ok(nu), True, True -> {
+      let #(acc, new_set) = case int.parse(item), idx >= 0 {
+        Ok(nu), True -> {
           case pre != item && pre != "" {
             True -> {
               #(acc + { nu * idx }, set.insert(visited, pre))
@@ -292,7 +350,7 @@ pub fn part2(input: String) -> Int {
             }
           }
         }
-        _, _, _ -> #(acc, visited)
+        _, _ -> #(acc, visited)
       }
       #(acc, new_set, item)
     })

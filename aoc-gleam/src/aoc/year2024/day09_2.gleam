@@ -150,17 +150,21 @@ pub fn pt_2(input: List(Block)) {
         _ -> False
       }
     })
-  find_free_space(drive, files)
-  |> list.flat_map(fn(f) {
-    case f {
-      File(size, id) -> list.repeat(id, size)
-      FreeSpan(size) -> list.repeat(0, size)
-    }
-  })
+  let a =
+    find_free_space(drive, files)
+    |> list.flat_map(fn(f) {
+      case f {
+        File(size, id) -> list.repeat(id, size)
+        FreeSpan(size) -> list.repeat(0, size)
+      }
+    })
+
+  io.debug(#(list.length(a)))
+  a
+  |> list.take(100)
   |> list.index_fold(0, fn(acc, block, index) {
-    case block != 0 && index < 100 {
+    case block != 0 {
       True -> {
-        io.debug(#(block, index))
         acc + block * index
       }
       False -> {
