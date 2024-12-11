@@ -97,29 +97,6 @@ fn replace_2(
                       fn(a, b) { int.compare(a.0, b.0) },
                     )
 
-                  let a = case last == "9999" {
-                    True -> {
-                      io.debug(
-                        #(
-                          list.reverse(list.take(
-                            list.reverse(list.take(
-                              new_row,
-                              valid_idx - number_size + 1,
-                            )),
-                            30,
-                          )),
-                        ),
-                      )
-                      io.debug(list.repeat(".", number_size))
-                      io.debug(list.drop(new_row, valid_idx + 1))
-                      io.debug(#(valid_idx, number_size))
-
-                      1
-                    }
-                    False -> {
-                      1
-                    }
-                  }
                   let a = case last == "4160" {
                     True -> {
                       io.debug(
@@ -133,9 +110,16 @@ fn replace_2(
                           )),
                         ),
                       )
-
+                      io.debug(nu)
+                      // io.debug(list.take(
+                      //   list.rest(list.drop(row, nu.0 + number_size - 1)),
+                      //   30,
+                      // ))
+                      io.debug(
+                        #(list.reverse(list.take(list.take(row, nu.0), 30))),
+                      )
                       io.debug(list.repeat(".", number_size))
-                      io.debug(list.drop(new_row, valid_idx + 1))
+                      io.debug(list.take(list.drop(new_row, valid_idx + 1), 30))
                       io.debug(#(valid_idx, number_size))
 
                       1
