@@ -1,8 +1,10 @@
 import birl
 import gleam/bool
+import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/result
 
 pub type FixFn1(a, b) =
   fn(fn(a) -> b, a) -> b
@@ -108,4 +110,8 @@ pub fn get_at(xs: List(a), k: Int) -> Result(a, Nil) {
     0 -> list.first(xs)
     k -> get_at(xs, k - 1)
   }
+}
+
+pub fn dict_get_unwrap(input_dict, key, default) {
+  result.unwrap(dict.get(input_dict, key), default)
 }

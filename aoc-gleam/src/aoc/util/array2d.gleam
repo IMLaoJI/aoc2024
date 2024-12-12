@@ -23,9 +23,33 @@ pub fn offset_posns(p1: Posn, p2: Posn) -> Posn {
   }
 }
 
+pub fn get_dir() {
+  [Posn(1, 0), Posn(-1, 0), Posn(0, 1), Posn(0, -1)]
+}
+
 pub fn ortho_neighbors(p: Posn) -> List(Posn) {
   let Posn(r, c) = p
-  [Posn(r + 1, c), Posn(r - 1, c), Posn(r, c + 1), Posn(r, c - 1)]
+  get_dir()
+  |> list.map(fn(p) {
+    let Posn(dr, dc) = p
+    Posn(r + dr, c + dc)
+  })
+}
+
+pub fn get_other_dir(old_position: Posn, direction: Posn) {
+  case old_position, direction {
+    Posn(-1, 0), Posn(0, -1) -> Posn(0, -1)
+    _, _ -> Posn(0, 1)
+  }
+}
+
+pub fn ortho_neighbors_with_direction(p: Posn) -> List(#(Posn, Posn)) {
+  let Posn(r, c) = p
+  get_dir()
+  |> list.map(fn(p) {
+    let Posn(dr, dc) = p
+    #(Posn(r + dr, c + dc), p)
+  })
 }
 
 pub fn to_2d_array(xss: List(List(a))) -> Array2D(a) {
@@ -71,6 +95,25 @@ pub fn to_2d_intarray(xss: List(List(String))) -> Array2D(Int) {
   }
   |> list.flatten
   |> dict.from_list
+}
+
+pub fn to_2d_stringarray(xss: List(List(String))) -> Array2D(String) {
+  {
+    use row, r <- list.index_map(xss)
+    use cell, c <- list.index_map(row)
+    #(Posn(r, c), cell)
+  }
+  |> list.flatten
+  |> dict.from_list
+}
+
+pub fn to_2d_stringlist(xss: List(List(String))) -> List(#(Posn, String)) {
+  {
+    use row, r <- list.index_map(xss)
+    use cell, c <- list.index_map(row)
+    #(Posn(r, c), cell)
+  }
+  |> list.flatten
 }
 
 pub fn to_list_of_lists(str: String) -> List(List(String)) {
