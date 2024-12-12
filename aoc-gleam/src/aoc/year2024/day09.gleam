@@ -114,7 +114,6 @@ fn replace_2(
                       list.take_while(list.reverse(new_row), fn(p) { p != next }),
                     )
 
-                  // io.debug(#(new_row, next_number_size, num, valid_idx))
                   #(
                     new_row,
                     list.length(new_row) - next_number_size - num,
@@ -135,27 +134,11 @@ fn replace_2(
                       list.take_while(list.reverse(row), fn(p) { p != next }),
                     )
 
-                  // io.debug(#(
-                  //   row,
-                  //   next_number_size,
-                  //   num,
-                  //   valid_idx,
-                  //   list.length(row),
-                  //   list.length(row) - next_number_size - num,
-                  // ))
                   #(row, list.length(row) - next_number_size - num, freq_list)
                 }
               }
             }
             False -> {
-              // case list.find(freq_list, fn(p) { { p.0 + p.1 } > valid_idx }) {
-              //   Ok(idx) -> {
-              //     #(row, idx.0 - 1)
-              //   }
-              //   Error(_) -> {
-              //     #(row, valid_idx - 1)
-              //   }
-              // }
               #(row, valid_idx - 1, freq_list)
             }
           }

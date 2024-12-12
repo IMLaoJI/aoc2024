@@ -36,10 +36,27 @@ pub fn ortho_neighbors(p: Posn) -> List(Posn) {
   })
 }
 
-pub fn get_other_dir(old_position: Posn, direction: Posn) {
+pub type Direction {
+  Left
+  Right
+  Top
+  Down
+}
+
+pub fn get_other_dir(old_position: Posn, direction: Direction) {
   case old_position, direction {
-    Posn(-1, 0), Posn(0, -1) -> Posn(0, -1)
-    _, _ -> Posn(0, 1)
+    Posn(-1, 0), Left -> Posn(0, -1)
+    Posn(-1, 0), Right -> Posn(0, 1)
+
+    Posn(0, 1), Left -> Posn(-1, 0)
+    Posn(0, 1), Right -> Posn(1, 0)
+
+    Posn(1, 0), Left -> Posn(0, 1)
+    Posn(1, 0), Right -> Posn(0, -1)
+
+    Posn(0, -1), Left -> Posn(1, 0)
+    Posn(0, -1), Right -> Posn(-1, 0)
+    _, _ -> old_position
   }
 }
 

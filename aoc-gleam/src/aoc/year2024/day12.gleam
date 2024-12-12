@@ -4,6 +4,7 @@ import aoc/util/to
 import gleam/bool
 import gleam/dict
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/set.{type Set}
 import pocket_watch
@@ -72,17 +73,44 @@ pub fn find_all_connect(input_array, input_dict) {
 pub fn get_perim_eages(posintions: Set(#(Posn, String))) {
   set.fold(posintions, [], fn(eages, p) {
     let posintion_list = set.map(posintions, fn(posintion) { posintion.0 })
-    array2d.ortho_neighbors(p.0)
-    |> list.filter(fn(p) { !set.contains(posintion_list, p) })
+    array2d.ortho_neighbors_with_direction(p.0)
+    |> list.filter(fn(p) { !set.contains(posintion_list, p.0) })
     |> list.append(eages, _)
   })
 }
 
-pub fn get_edge_count(edges: List(Posn), collect) {
+pub fn exist_egdes(egde, next_dir, edges: Set(#(Posn, Posn))) {
+  case set.contains(edges, egde) {
+    True -> {
+      exist_egdes(
+        #(array2d.add_posns(egde.0, next_dir), egde.1),
+        next_dir,
+        set.delete(edges, egde),
+      )
+    }
+    False -> edges
+  }
+}
+
+pub fn get_edge_count(edges: List(#(Posn, Posn)), collect: List(Posn)) {
   case edges {
     [] -> collect
     [edge, ..rest] -> {
-      collect
+      let #(space, dir) = edge
+      let rest =
+        list.fold(
+          [array2d.Left, array2d.Right],
+          set.from_list(rest),
+          fn(rest, p) {
+            let next_dir = array2d.get_other_dir(dir, p)
+            exist_egdes(
+              #(array2d.add_posns(space, next_dir), dir),
+              next_dir,
+              rest,
+            )
+          },
+        )
+      get_edge_count(set.to_list(rest), list.append(collect, [space]))
     }
   }
 }
@@ -101,7 +129,7 @@ pub fn part1(input: String) -> Int {
 }
 
 pub fn part2(input: String) -> Int {
-  use <- pocket_watch.simple("part 1")
+  use <- pocket_watch.simple("part 2")
   let #(input_array, input_dict) =
     input
     |> parse
@@ -110,7 +138,7 @@ pub fn part2(input: String) -> Int {
     let area = set.size(posintions)
     let edges = get_perim_eages(posintions)
     let perim =
-      get_edge_count(edges, [])
+      get_edge_count(edges, list.new())
       |> list.length
     acc + area * perim
   })
