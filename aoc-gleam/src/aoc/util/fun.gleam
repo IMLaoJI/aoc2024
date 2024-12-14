@@ -108,7 +108,7 @@ pub fn get_at(xs: List(a), k: Int) -> Result(a, Nil) {
   use <- bool.guard(k < 0, Error(Nil))
   case k {
     0 -> list.first(xs)
-    k -> get_at(xs, k - 1)
+    k -> get_at(result.unwrap(list.rest(xs), []), k - 1)
   }
 }
 

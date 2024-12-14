@@ -25,6 +25,7 @@ import aoc/year2024/day10
 import aoc/year2024/day11
 import aoc/year2024/day11_2
 import aoc/year2024/day12
+import aoc/year2024/day13
 import gleam/string
 
 pub fn run(input: String, day: Int, part: Int) {
@@ -83,6 +84,8 @@ pub fn run(input: String, day: Int, part: Int) {
     11, 22 -> input |> day11_2.part2 |> string.inspect
     12, 1 -> input |> day12.part1 |> string.inspect
     12, 2 -> input |> day12.part2 |> string.inspect
+    13, 1 -> input |> day13.part1 |> string.inspect
+    13, 2 -> input |> day13.part2 |> string.inspect
     _, _ ->
       "Unknown day and part for 2024: day "
       <> string.inspect(day)
