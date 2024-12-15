@@ -38,6 +38,15 @@ fn replace(row) {
   }
 }
 
+pub fn get_new_index(row, sorted_list, find_dict) {
+  let next =
+    to.unwrap(list.first(to.unwrap(list.rest(list.reverse(sorted_list)))))
+
+  let next_number_size = list.length(to.unwrap(dict.get(find_dict, next)))
+  let num = list.length(list.take_while(list.reverse(row), fn(p) { p != next }))
+  list.length(row) - next_number_size - num
+}
+
 fn replace_2(
   row,
   find_dict,
@@ -48,124 +57,64 @@ fn replace_2(
 ) {
   case valid_idx > 0 {
     True -> {
-      // let assert Ok(last) = list.last(set.to_list(new_dict))
       let assert Ok(last) = list.last(sorted_list)
-      let assert Ok(last2) = list.last(list.take(row, valid_idx + 1))
-      case set.contains(visited, last2) && last != last2 {
+      let #(new_row, new_valid_idx, new_freq_list) = case
+        last != "." && !set.contains(visited, last)
+      {
         True -> {
-          replace_2(
-            row,
-            find_dict,
-            freq_list,
-            visited,
-            list.length(list.take_while(row, fn(p) { p != last })),
-            sorted_list,
-          )
+          let number_size = list.length(to.unwrap(dict.get(find_dict, last)))
+          let find_element =
+            list.find(freq_list, fn(p) {
+              valid_idx >= p.0 && p.1 >= number_size
+            })
+          case find_element {
+            Ok(nu) -> {
+              let new_row =
+                list.take(row, nu.0)
+                |> list.append(list.repeat(last, number_size))
+                |> list.append(
+                  to.unwrap(list.rest(list.drop(row, nu.0 + number_size - 1))),
+                )
+
+              let new_freq_list =
+                list.sort(
+                  list.map(freq_list, fn(p) {
+                    case p.0 == nu.0 {
+                      True -> #(nu.0 + number_size, nu.1 - number_size)
+                      False -> p
+                    }
+                  }),
+                  fn(a, b) { int.compare(a.0, b.0) },
+                )
+
+              let new_row =
+                list.take(new_row, valid_idx)
+                |> list.append(list.repeat(".", number_size))
+                |> list.append(list.drop(new_row, valid_idx + number_size))
+
+              #(
+                new_row,
+                get_new_index(new_row, sorted_list, find_dict),
+                new_freq_list,
+              )
+            }
+            Error(_) -> {
+              #(row, get_new_index(row, sorted_list, find_dict), freq_list)
+            }
+          }
         }
         False -> {
-          let is_number = result.is_ok(int.parse(last))
-          let #(new_row, new_valid_idx, new_freq_list) = case
-            last != "." && !set.contains(visited, last)
-          {
-            True -> {
-              let number_size =
-                list.length(to.unwrap(dict.get(find_dict, last)))
-              let find_element =
-                list.find(freq_list, fn(p) {
-                  valid_idx >= p.0 && p.1 >= number_size
-                })
-              case find_element {
-                Ok(nu) -> {
-                  let new_row =
-                    list.take(row, nu.0)
-                    |> list.append(list.repeat(last, number_size))
-                    |> list.append(
-                      to.unwrap(
-                        list.rest(list.drop(row, nu.0 + number_size - 1)),
-                      ),
-                    )
-
-                  let new_freq_list =
-                    list.sort(
-                      list.map(freq_list, fn(p) {
-                        case p.0 == nu.0 {
-                          True -> #(nu.0 + number_size, nu.1 - number_size)
-                          False -> p
-                        }
-                      }),
-                      fn(a, b) { int.compare(a.0, b.0) },
-                    )
-
-                  let new_row =
-                    list.take(new_row, valid_idx)
-                    |> list.append(list.repeat(".", number_size))
-                    |> list.append(list.drop(new_row, valid_idx + number_size))
-                  let next =
-                    to.unwrap(
-                      list.first(
-                        to.unwrap(list.rest(list.reverse(sorted_list))),
-                      ),
-                    )
-
-                  let next_number_size =
-                    list.length(to.unwrap(dict.get(find_dict, next)))
-                  let num =
-                    list.length(
-                      list.take_while(list.reverse(new_row), fn(p) { p != next }),
-                    )
-
-                  #(
-                    new_row,
-                    list.length(new_row) - next_number_size - num,
-                    new_freq_list,
-                  )
-                }
-                Error(_) -> {
-                  let next =
-                    to.unwrap(
-                      list.first(
-                        to.unwrap(list.rest(list.reverse(sorted_list))),
-                      ),
-                    )
-                  let next_number_size =
-                    list.length(to.unwrap(dict.get(find_dict, next)))
-                  let num =
-                    list.length(
-                      list.take_while(list.reverse(row), fn(p) { p != next }),
-                    )
-
-                  #(row, list.length(row) - next_number_size - num, freq_list)
-                }
-              }
-            }
-            False -> {
-              #(row, valid_idx - 1, freq_list)
-            }
-          }
-          case is_number {
-            True -> {
-              replace_2(
-                new_row,
-                dict.delete(find_dict, last),
-                new_freq_list,
-                set.insert(visited, last),
-                new_valid_idx,
-                list.reverse(to.unwrap(list.rest(list.reverse(sorted_list)))),
-              )
-            }
-            False -> {
-              replace_2(
-                new_row,
-                dict.delete(find_dict, last),
-                new_freq_list,
-                visited,
-                new_valid_idx,
-                list.reverse(to.unwrap(list.rest(list.reverse(sorted_list)))),
-              )
-            }
-          }
+          #(row, valid_idx - 1, freq_list)
         }
       }
+      replace_2(
+        new_row,
+        dict.delete(find_dict, last),
+        new_freq_list,
+        set.insert(visited, last),
+        new_valid_idx,
+        list.reverse(to.unwrap(list.rest(list.reverse(sorted_list)))),
+      )
     }
     False -> row
   }
