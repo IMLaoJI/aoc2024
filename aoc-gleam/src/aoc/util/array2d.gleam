@@ -27,6 +27,15 @@ pub fn get_dir() {
   [Posn(1, 0), Posn(-1, 0), Posn(0, 1), Posn(0, -1)]
 }
 
+pub fn get_direction_dir(direction) {
+  case direction {
+    Left -> Posn(0, -1)
+    Right -> Posn(0, 1)
+    Top -> Posn(-1, 0)
+    Down -> Posn(1, 0)
+  }
+}
+
 pub fn ortho_neighbors(p: Posn) -> List(Posn) {
   let Posn(r, c) = p
   get_dir()
