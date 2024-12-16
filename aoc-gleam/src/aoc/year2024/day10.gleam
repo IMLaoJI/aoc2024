@@ -33,7 +33,7 @@ fn count(current: #(Posn, Int), find_dict: Dict(Posn, Int), visisted) {
         && to.unwrap(dict.get(find_dict, p)) - nu == 1
       })
       |> list.fold(visisted, fn(accc, p) {
-        count(#(p, to.unwrap(dict.get(find_dict, p))), find_dict, accc)
+        count(#(p, nu + 1), find_dict, accc)
       })
     }
     _ -> visisted
