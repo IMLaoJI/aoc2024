@@ -27,6 +27,10 @@ pub fn get_dir() {
   [Posn(1, 0), Posn(-1, 0), Posn(0, 1), Posn(0, -1)]
 }
 
+pub fn get_dir_type() {
+  [Left, Right, Top, Down]
+}
+
 pub fn get_direction_dir(direction) {
   case direction {
     Left -> Posn(0, -1)
