@@ -164,6 +164,15 @@ pub fn part1(input: String) -> Int {
   1
 }
 
+//   Based on the program:
+//   B = A & 7
+//   B = B ^ 7
+//   C = A // 2**B
+//   B = B ^ C
+//   B = B ^ 4
+//   A = A // 8
+//   OUT(B & 7)
+//   jnz A 0
 fn encode(num, i, program, res) {
   use <- bool.guard(i < 0, res)
   let val = to.unwrap(fun.get_at(program, i))
