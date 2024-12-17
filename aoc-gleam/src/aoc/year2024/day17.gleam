@@ -1,3 +1,4 @@
+import aoc/util/fun
 import aoc/util/re
 import aoc/util/to
 import gleam/bool
@@ -163,9 +164,30 @@ pub fn part1(input: String) -> Int {
   1
 }
 
-fn encode(num, i, program) {
-  use <- bool.guard(i < 0, num)
-  todo
+fn encode(num, i, program, res) {
+  use <- bool.guard(i < 0, res)
+  let val = to.unwrap(fun.get_at(program, i))
+  list.flat_map(list.range(0, 7), fn(p) {
+    let new_num = 8 * num + p
+    let b = int.bitwise_exclusive_or(p, 7)
+    let assert Ok(divisor) = int.power(2, int.to_float(b))
+    let c = to.unwrap(int.floor_divide(new_num, float.round(divisor)))
+    let b = int.bitwise_exclusive_or(b, c)
+    let b = int.bitwise_exclusive_or(b, 4)
+    case mod(b, 8) == val {
+      True -> {
+        case i == 0 {
+          True -> {
+            list.append(res, [new_num])
+          }
+          False -> {
+            encode(new_num, i - 1, program, res)
+          }
+        }
+      }
+      False -> res
+    }
+  })
 }
 
 pub fn part2(input: String) -> Int {
@@ -173,7 +195,7 @@ pub fn part2(input: String) -> Int {
     input
     |> parse
 
-  encode(0, list.length(config.propgram), config.propgram)
-  |> io.debug
-  1
+  encode(0, list.length(config.propgram) - 1, config.propgram, [])
+  |> list.first
+  |> to.unwrap
 }
