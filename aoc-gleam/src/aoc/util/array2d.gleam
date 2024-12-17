@@ -146,6 +146,25 @@ pub fn to_2d_stringlist(xss: List(List(String))) -> List(#(Posn, String)) {
   |> list.flatten
 }
 
+pub fn to_2d_stringlist_with_po(
+  xss: List(List(String)),
+) -> List(List(#(Posn, String))) {
+  {
+    use row, r <- list.index_map(xss)
+    use cell, c <- list.index_map(row)
+    #(Posn(r, c), cell)
+  }
+}
+
+pub fn to_list_of_lists_with_po(str: String) -> List(List(#(Posn, String))) {
+  str
+  |> string.trim
+  |> string.split("\n")
+  |> list.map(string.trim)
+  |> list.map(string.to_graphemes)
+  |> to_2d_stringlist_with_po
+}
+
 pub fn to_list_of_lists(str: String) -> List(List(String)) {
   str
   |> string.trim

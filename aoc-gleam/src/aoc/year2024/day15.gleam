@@ -15,8 +15,7 @@ fn parse(input) {
     |> dict.insert("v", Down)
 
   let assert Ok(#(first, second)) = string.split_once(input, "\r\n\r\n")
-  let input_position_array =
-    first |> array2d.to_list_of_lists |> array2d.to_2d_stringlist
+  let input_position_array = first |> array2d.to_list_of_lists_with_po
   let list_string = array2d.to_list_of_lists(first)
   let moves =
     list.flat_map(string.split(second, "\r\n"), fn(line) {
@@ -24,10 +23,11 @@ fn parse(input) {
     })
     |> list.map(fn(p) { to.unwrap(dict.get(maps, p)) })
   #(
-    input_position_array,
-    dict.from_list(input_position_array),
+    input_position_array |> list.flatten,
+    dict.from_list(input_position_array |> list.flatten),
     moves,
     list.length(to.unwrap(list.first(list_string))),
+    input_position_array,
   )
 }
 
@@ -108,8 +108,19 @@ pub fn find_box(dict) {
   dict.filter(dict, fn(_, value) { value == "O" })
 }
 
+fn print(input_position_array: List(#(Posn, String)), res_dict, width) {
+  input_position_array
+  |> list.sized_chunk(width)
+  |> list.map(fn(a) {
+    io.debug(string.join(
+      list.map(a, fn(b) { to.unwrap(dict.get(res_dict, b.0)) }),
+      "",
+    ))
+  })
+}
+
 pub fn part1(input: String) {
-  let #(input_position_array, input_dict, moves, width) = input |> parse
+  let #(input_position_array, input_dict, moves, width, _) = input |> parse
   let start = find_start(input_position_array)
   let res =
     moves
@@ -118,23 +129,45 @@ pub fn part1(input: String) {
       let acc = move(start_p, dir, acc_dict)
       acc
     })
-
-  input_position_array
-  |> list.sized_chunk(width)
-  |> list.map(fn(a) {
-    io.debug(string.join(
-      list.map(a, fn(b) { to.unwrap(dict.get(res.1, b.0)) }),
-      "",
-    ))
-  })
-
+  print(input_position_array, res.1, width)
   find_box(res.1)
   |> dict.keys
   |> list.fold(0, fn(acc, p) { acc + p.r * 100 + p.c })
 }
 
+fn change_map(input_position_array_level: List(List(#(Posn, String)))) {
+  list.map(input_position_array_level, fn(p) {
+    list.fold(p, [], fn(acc, item) {
+      let #(position, char) = item
+      let new_item = case char {
+        "#" -> ["#", "#"]
+        "O" -> ["[", "]"]
+        "." -> [".", "."]
+        "@" -> ["@", "."]
+        _ -> panic
+      }
+      list.append(acc, new_item)
+    })
+  })
+  |> io.debug
+}
+
 pub fn part2(input: String) -> Int {
-  input
-  |> parse
+  let #(
+    input_position_array,
+    input_dict,
+    moves,
+    width,
+    input_position_array_level,
+  ) =
+    input
+    |> parse
+
+  let new_array =
+    change_map(input_position_array_level)
+    |> array2d.to_2d_stringlist
+  let new_dict = dict.from_list(new_array)
+  print(new_array, new_dict, width * 2)
+
   1
 }
