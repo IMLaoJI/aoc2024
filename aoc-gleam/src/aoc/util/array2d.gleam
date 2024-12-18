@@ -17,6 +17,10 @@ pub fn add_posns(p1: Posn, p2: Posn) -> Posn {
   }
 }
 
+pub fn add_direction(p1: Posn, dir: Direction) -> Posn {
+  add_posns(p1, get_direction_dir(dir))
+}
+
 pub fn offset_posns(p1: Posn, p2: Posn) -> Posn {
   case p1, p2 {
     Posn(r1, c1), Posn(r2, c2) -> Posn(r2 - r1, c2 - c1)

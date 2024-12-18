@@ -2,6 +2,7 @@ import aoc/util/array2d.{type Direction, type Posn, Down, Left, Right, Top}
 import aoc/util/to
 import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
 
 import gleam/dict.{type Dict}
@@ -104,6 +105,125 @@ pub fn move(current: Posn, direction: Direction, input_dict: Dict(Posn, String))
   }
 }
 
+pub fn find_next_postion2(
+  current: List(Posn),
+  direction: Direction,
+  change_list,
+  input_dict: Dict(Posn, String),
+) {
+  io.debug("---")
+  list.fold(current, [], fn(acc, p) {
+    let next_position =
+      array2d.add_posns(p, array2d.get_direction_dir(direction))
+    let a = case dict.get(input_dict, next_position) {
+      Ok(po) if po == "." -> Ok(change_list)
+      Ok(po) if po == "#" -> Error([])
+      Ok(po) -> {
+        let new_change = case po {
+          "[" -> {
+            let right =
+              array2d.add_posns(
+                next_position,
+                array2d.get_direction_dir(array2d.Right),
+              )
+            list.append(change_list, [
+              #(
+                next_position,
+                array2d.add_posns(
+                  next_position,
+                  array2d.get_direction_dir(direction),
+                ),
+              ),
+              #(
+                right,
+                array2d.add_posns(right, array2d.get_direction_dir(direction)),
+              ),
+            ])
+          }
+          "]" -> {
+            let left =
+              array2d.add_posns(
+                next_position,
+                array2d.get_direction_dir(array2d.Left),
+              )
+            list.append(change_list, [
+              #(
+                next_position,
+                array2d.add_posns(
+                  next_position,
+                  array2d.get_direction_dir(direction),
+                ),
+              ),
+              #(
+                left,
+                array2d.add_posns(left, array2d.get_direction_dir(direction)),
+              ),
+            ])
+          }
+          _ -> panic
+        }
+        io.debug(new_change)
+        Ok(find_next_postion2(
+          new_change |> list.map(fn(n) { n.1 }),
+          direction,
+          new_change,
+          input_dict,
+        ))
+      }
+      Error(_) -> Error([])
+    }
+    result.unwrap(a, [])
+  })
+}
+
+pub fn move2(
+  current: Posn,
+  direction: Direction,
+  input_dict: Dict(Posn, String),
+) {
+  let next_position =
+    array2d.add_posns(current, array2d.get_direction_dir(direction))
+  io.debug(dict.get(input_dict, next_position))
+  case dict.get(input_dict, next_position) {
+    Ok(po) if po == "." -> {
+      #(
+        next_position,
+        dict.insert(input_dict, current, ".")
+          |> dict.insert(next_position, "@"),
+      )
+    }
+    Ok(po) if po == "[" || po == "]" -> {
+      // find next dot position in same direction
+      case find_next_postion2([current], direction, [], input_dict) {
+        change_list -> {
+          io.debug("find_next_postion2")
+          let new_dict =
+            list.fold(change_list, input_dict, fn(acc, n) {
+              io.debug(change_list)
+              case list.find(change_list, fn(a) { a.1 == n.0 }) {
+                Ok(_) -> {
+                  dict.insert(acc, n.1, to.unwrap(dict.get(input_dict, n.0)))
+                }
+                Error(_) -> {
+                  dict.insert(acc, n.0, ".")
+                  |> dict.insert(n.1, to.unwrap(dict.get(input_dict, n.0)))
+                }
+              }
+            })
+          #(
+            next_position,
+            dict.insert(new_dict, current, ".")
+              |> dict.insert(next_position, "@"),
+          )
+        }
+        [] -> #(current, input_dict)
+      }
+    }
+    Ok(_) -> #(current, input_dict)
+    Error(_) -> #(current, input_dict)
+  }
+}
+
 pub fn find_box(dict) {
   dict.filter(dict, fn(_, value) { value == "O" })
 }
@@ -168,6 +288,16 @@ pub fn part2(input: String) -> Int {
     |> array2d.to_2d_stringlist
   let new_dict = dict.from_list(new_array)
   print(new_array, new_dict, width * 2)
+  let start = find_start(new_array)
+  let res =
+    moves
+    |> list.fold(#(start.0, new_dict), fn(acc, dir) {
+      io.debug("000")
+      let #(start_p, acc_dict) = acc
+      let acc = move2(start_p, dir, acc_dict)
+      acc
+    })
 
+  print(new_array, res.1, width * 2)
   1
 }
