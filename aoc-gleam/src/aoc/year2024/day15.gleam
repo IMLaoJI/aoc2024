@@ -1,3 +1,4 @@
+// bad solution  can't fix part2
 import aoc/util/array2d.{type Direction, type Posn, Down, Left, Right, Top}
 import aoc/util/to
 import gleam/io
@@ -114,14 +115,18 @@ pub fn find_next_postion2(
   list.fold(current, [], fn(acc, p) {
     let next_position =
       array2d.add_posns(p, array2d.get_direction_dir(direction))
-    io.debug(#(dict.get(input_dict, next_position), next_position))
-    let a = case dict.get(input_dict, next_position) {
-      Ok(po) if po == "." -> Ok(change_list)
-      Ok(po) if po == "#" -> Error([])
-      Ok(po) if po == "[" || po == "]" -> {
+    io.debug(#(
+      current,
+      dict.get(input_dict, next_position),
+      dict.get(input_dict, p),
+      next_position,
+      change_list,
+    ))
+    let a = case dict.get(input_dict, next_position), dict.get(input_dict, p) {
+      Ok(po), Ok(po1) if po1 == "[" || po1 == "]" || po == "[" || po == "]" -> {
         io.debug(#(current, direction))
-        let new_change = case po {
-          "[" -> {
+        let new_change = case po == "[" || po1 == "[" {
+          True -> {
             let right =
               array2d.add_posns(
                 next_position,
@@ -141,7 +146,7 @@ pub fn find_next_postion2(
               ),
             ])
           }
-          "]" -> {
+          False -> {
             let left =
               array2d.add_posns(
                 next_position,
@@ -161,9 +166,7 @@ pub fn find_next_postion2(
               ),
             ])
           }
-          _ -> panic
         }
-        io.debug(new_change)
         Ok(find_next_postion2(
           new_change |> list.map(fn(n) { n.1 }),
           direction,
@@ -171,11 +174,14 @@ pub fn find_next_postion2(
           input_dict,
         ))
       }
-      Ok(_) -> {
+      Ok(po), Ok(po1) if po == "." -> Ok(change_list)
+      Ok(po), Ok(po1) if po == "#" -> Error([])
+
+      Ok(_), Ok(_) -> {
         io.debug("--------")
         Error([])
       }
-      Error(_) -> Error([])
+      _, _ -> Error([])
     }
     io.debug(#(a, result.unwrap(a, [])))
     result.unwrap(a, [])
@@ -295,7 +301,6 @@ pub fn part2(input: String) -> Int {
   let new_dict = dict.from_list(new_array)
   print(new_array, new_dict, width * 2)
   let start = find_start(new_array)
-  io.debug(moves)
   let res =
     moves
     |> list.fold(#(start.0, new_dict), fn(acc, dir) {
