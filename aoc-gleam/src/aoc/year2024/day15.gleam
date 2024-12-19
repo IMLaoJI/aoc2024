@@ -111,14 +111,15 @@ pub fn find_next_postion2(
   change_list,
   input_dict: Dict(Posn, String),
 ) {
-  io.debug("---")
   list.fold(current, [], fn(acc, p) {
     let next_position =
       array2d.add_posns(p, array2d.get_direction_dir(direction))
+    io.debug(#(dict.get(input_dict, next_position), next_position))
     let a = case dict.get(input_dict, next_position) {
       Ok(po) if po == "." -> Ok(change_list)
       Ok(po) if po == "#" -> Error([])
-      Ok(po) -> {
+      Ok(po) if po == "[" || po == "]" -> {
+        io.debug(#(current, direction))
         let new_change = case po {
           "[" -> {
             let right =
@@ -170,8 +171,13 @@ pub fn find_next_postion2(
           input_dict,
         ))
       }
+      Ok(_) -> {
+        io.debug("--------")
+        Error([])
+      }
       Error(_) -> Error([])
     }
+    io.debug(#(a, result.unwrap(a, [])))
     result.unwrap(a, [])
   })
 }
@@ -183,7 +189,6 @@ pub fn move2(
 ) {
   let next_position =
     array2d.add_posns(current, array2d.get_direction_dir(direction))
-  io.debug(dict.get(input_dict, next_position))
   case dict.get(input_dict, next_position) {
     Ok(po) if po == "." -> {
       #(
@@ -194,19 +199,20 @@ pub fn move2(
     }
     Ok(po) if po == "[" || po == "]" -> {
       // find next dot position in same direction
-      case find_next_postion2([current], direction, [], input_dict) {
-        change_list -> {
-          io.debug("find_next_postion2")
+      let change_list = find_next_postion2([current], direction, [], input_dict)
+      case list.length(change_list) > 0 {
+        True -> {
+          io.debug(#(current, change_list))
+
           let new_dict =
             list.fold(change_list, input_dict, fn(acc, n) {
-              io.debug(change_list)
               case list.find(change_list, fn(a) { a.1 == n.0 }) {
                 Ok(_) -> {
                   dict.insert(acc, n.1, to.unwrap(dict.get(input_dict, n.0)))
                 }
                 Error(_) -> {
                   dict.insert(acc, n.0, ".")
-                  |> dict.insert(n.1, to.unwrap(dict.get(input_dict, n.0)))
+                  dict.insert(acc, n.1, to.unwrap(dict.get(input_dict, n.0)))
                 }
               }
             })
@@ -216,7 +222,7 @@ pub fn move2(
               |> dict.insert(next_position, "@"),
           )
         }
-        [] -> #(current, input_dict)
+        False -> #(current, input_dict)
       }
     }
     Ok(_) -> #(current, input_dict)
@@ -289,11 +295,13 @@ pub fn part2(input: String) -> Int {
   let new_dict = dict.from_list(new_array)
   print(new_array, new_dict, width * 2)
   let start = find_start(new_array)
+  io.debug(moves)
   let res =
     moves
     |> list.fold(#(start.0, new_dict), fn(acc, dir) {
-      io.debug("000")
       let #(start_p, acc_dict) = acc
+      io.debug(#(start_p, dir))
+
       let acc = move2(start_p, dir, acc_dict)
       acc
     })
