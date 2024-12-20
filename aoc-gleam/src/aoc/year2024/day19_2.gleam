@@ -26,17 +26,22 @@ fn can_make(
     #(to.unwrap(has_cache), cache)
   })
   let current = string.drop_start(design, start)
-  use <- bool.guard(current == "", #(1, dict.insert(cache, #(design, start), 1)))
+  use <- bool.lazy_guard(current == "", fn() {
+    #(1, dict.insert(cache, #(design, start), 1))
+  })
   let valid = list.filter(towels, fn(p) { string.starts_with(current, p) })
   case valid {
     [] -> #(0, dict.insert(cache, #(design, start), 0))
     _ -> {
-      let a = {
-        list.fold(valid, 0, fn(acc, item) {
-          acc + can_make(design, towels, start + string.length(item), cache).0
+      let #(count, dict) = {
+        list.fold(valid, #(0, cache), fn(acc, item) {
+          let #(count, dict) = acc
+          let #(num, dict) =
+            can_make(design, towels, start + string.length(item), dict)
+          #(count + num, dict)
         })
       }
-      #(a, dict.insert(cache, #(design, start), a))
+      #(count, dict.insert(dict, #(design, start), count))
     }
   }
 }
