@@ -263,10 +263,10 @@ fn gets(
       array2d.offset_posns(p, tgt)
       |> array2d.get_direction_from_posn
     let dir_str = to.unwrap(dict.get(config, dir))
-    io.debug(dir)
+    // io.debug(dir)
     let next = gets(m, src, p, config)
     list.fold(next, acc, fn(sub_acc, item) {
-      list.append(sub_acc, [string.join([item, dir_str], "")])
+      list.append(sub_acc, [item <> dir_str])
     })
   })
 }
@@ -288,10 +288,25 @@ fn go(
   let src = to.unwrap(dict.get(rm, csrc))
   let tgt = to.unwrap(dict.get(rm, ctgt))
   let min_path = ""
-  list.fold(gets(cost, src, tgt, config), min_path, fn(acc, item) {
-    io.debug(item)
-    acc
-  })
+  let min_path =
+    list.fold(gets(cost, src, tgt, config), min_path, fn(acc, item) {
+      // io.debug(item)
+      let #(spath, _) =
+        list.fold(
+          string.to_graphemes(item <> "A"),
+          #("", "A"),
+          fn(sub_acc, item) {
+            let #(spath, pos) = sub_acc
+            let spath = spath <> go(i + 1, pos, item, maps, config)
+            #(spath, item)
+          },
+        )
+      case acc == "" || string.length(spath) < string.length(acc) {
+        True -> spath
+        False -> acc
+      }
+    })
+  min_path
 }
 
 pub fn part1(input: String) -> Int {
@@ -334,23 +349,31 @@ pub fn part1(input: String) -> Int {
         key,
       )
     })
-    |> io.debug
 
   let maps = [
     #(num_costs, number_map_config),
     #(dir_costs, direction_string_config),
     #(dir_costs, direction_string_config),
   ]
-  go(0, "A", "2", maps, direction_map_config)
-  // input_data
-  // |> list.map(fn(p) {
-  //   list.window_by_2(p)
-  //   |> list.map(fn(pair) {
-  //     let #(start, end) = pair
 
-  //   })
-  // })
-  // |> io.debug
+  input_data
+  |> list.map(fn(p) {
+    let num =
+      list.filter(p, fn(t) { int.parse(t.1) |> result.is_ok })
+      |> list.map(fn(t) { t.1 })
+      |> string.join("")
+      |> to.int
+    let min_path =
+      list.window_by_2(p)
+      |> list.fold("", fn(acc, pair) {
+        let #(start, end) = pair
+
+        acc <> go(0, start.1, end.1, maps, direction_map_config)
+      })
+    #(num, min_path)
+  })
+  |> list.fold(0, fn(acc, t) { acc + t.0 * string.length(t.1) })
+  |> io.debug
   1
 }
 
