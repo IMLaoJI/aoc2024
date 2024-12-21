@@ -4,6 +4,7 @@ import aoc/util/to
 import gleam/bool
 import gleam/deque
 import gleam/dict.{type Dict}
+import gleam/float
 import gleam/int
 import gleam/io
 import gleam/list
@@ -13,6 +14,7 @@ import gleam/set
 import gleam/string
 import gleamy/pairing_heap
 import gleamy/priority_queue as pq
+import rememo/memo
 
 type Config {
   Config(
@@ -309,7 +311,44 @@ fn go(
   min_path
 }
 
-pub fn part1(input: String) -> Int {
+fn go2(
+  i,
+  csrc,
+  ctgt,
+  maps: List(
+    #(
+      Dict(Posn, #(Dict(Posn, Int), Dict(Posn, List(Posn)))),
+      Dict(String, Posn),
+    ),
+  ),
+  config,
+  cache,
+) {
+  use <- memo.memoize(cache, #(i, csrc, ctgt))
+  use <- bool.guard(i == list.length(maps), 1)
+  let #(cost, rm) = to.unwrap(fun.get_at(maps, i))
+  let src = to.unwrap(dict.get(rm, csrc))
+  let tgt = to.unwrap(dict.get(rm, ctgt))
+  let min_path = 99_999_999_999
+  let min_path =
+    list.fold(gets(cost, src, tgt, config), min_path, fn(acc, item) {
+      // io.debug(item)
+      let #(spath, _) =
+        list.fold(
+          string.to_graphemes(item <> "A"),
+          #(0, "A"),
+          fn(sub_acc, item) {
+            let #(spath, pos) = sub_acc
+            let spath = spath + go2(i + 1, pos, item, maps, config, cache)
+            #(spath, item)
+          },
+        )
+      int.min(spath, acc)
+    })
+  min_path
+}
+
+fn init_config_and_cost(input) {
   let #(
     number_config,
     number_map_config,
@@ -349,13 +388,28 @@ pub fn part1(input: String) -> Int {
         key,
       )
     })
+  #(
+    num_costs,
+    dir_costs,
+    input_data,
+    number_map_config,
+    direction_string_config,
+    direction_map_config,
+  )
+}
 
-  let maps = [
-    #(num_costs, number_map_config),
-    #(dir_costs, direction_string_config),
-    #(dir_costs, direction_string_config),
-  ]
-
+pub fn part1(input: String) -> Int {
+  let #(
+    num_costs,
+    dir_costs,
+    input_data,
+    number_map_config,
+    direction_string_config,
+    direction_map_config,
+  ) = init_config_and_cost(input)
+  let maps =
+    [#(num_costs, number_map_config)]
+    |> list.append(list.repeat(#(dir_costs, direction_string_config), 2))
   input_data
   |> list.map(fn(p) {
     let num =
@@ -373,12 +427,36 @@ pub fn part1(input: String) -> Int {
     #(num, min_path)
   })
   |> list.fold(0, fn(acc, t) { acc + t.0 * string.length(t.1) })
-  |> io.debug
-  1
 }
 
 pub fn part2(input: String) -> Int {
-  // input
-  // |> parse
-  1
+  let #(
+    num_costs,
+    dir_costs,
+    input_data,
+    number_map_config,
+    direction_string_config,
+    direction_map_config,
+  ) = init_config_and_cost(input)
+  let maps =
+    [#(num_costs, number_map_config)]
+    |> list.append(list.repeat(#(dir_costs, direction_string_config), 25))
+
+  use cache <- memo.create()
+  input_data
+  |> list.map(fn(p) {
+    let num =
+      list.filter(p, fn(t) { int.parse(t.1) |> result.is_ok })
+      |> list.map(fn(t) { t.1 })
+      |> string.join("")
+      |> to.int
+    let min_path =
+      list.window_by_2(p)
+      |> list.fold(0, fn(acc, pair) {
+        let #(start, end) = pair
+        acc + go2(0, start.1, end.1, maps, direction_map_config, cache)
+      })
+    #(num, min_path)
+  })
+  |> list.fold(0, fn(acc, t) { acc + t.0 * t.1 })
 }
