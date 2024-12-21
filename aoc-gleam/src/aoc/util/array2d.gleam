@@ -44,6 +44,16 @@ pub fn get_direction_dir(direction) {
   }
 }
 
+pub fn get_direction_from_posn(posn) {
+  case posn {
+    Posn(0, -1) -> Left
+    Posn(0, 1) -> Right
+    Posn(-1, 0) -> Top
+    Posn(1, 0) -> Down
+    Posn(_, _) -> panic
+  }
+}
+
 pub fn ortho_neighbors(p: Posn) -> List(Posn) {
   let Posn(r, c) = p
   get_dir()
