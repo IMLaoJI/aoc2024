@@ -135,17 +135,17 @@ fn bfs(config: Config, queue, visited, prev_dict) {
   }
 }
 
-fn count_saving_cheats(config: Config) {
-  let queue =
-    deque.new()
-    |> deque.push_back(#(config.start, 0))
-  let visited = set.new() |> set.insert(config.start.0)
-  bfs(config, queue, visited, dict.new())
-}
+// fn count_saving_cheats(config: Config) {
+//   let queue =
+//     deque.new()
+//     |> deque.push_back(#(config.start, 0))
+//   let visited = set.new() |> set.insert(config.start.0)
+//   bfs(config, queue, visited, dict.new())
+// }
 
-fn dijkstra_with_target(m, edges, start, heuristic, target) {
-  todo
-}
+// fn dijkstra_with_target(m, edges, start, heuristic, target) {
+//   todo
+// }
 
 fn dijkstra_with_target_heuristic_round(
   queue: pairing_heap.Heap(#(Int, Int, Posn)),
@@ -364,7 +364,7 @@ fn init_config_and_cost(input) {
     |> io.debug
 
   let num_costs =
-    dict.map_values(number_config, fn(key, value) {
+    dict.map_values(number_config, fn(key, _) {
       dijkstra(
         Config(
           number_config,
@@ -377,7 +377,7 @@ fn init_config_and_cost(input) {
     })
 
   let dir_costs =
-    dict.map_values(direction_config, fn(key, value) {
+    dict.map_values(direction_config, fn(key, _) {
       dijkstra(
         Config(
           direction_config,

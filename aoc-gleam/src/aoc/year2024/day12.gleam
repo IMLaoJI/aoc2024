@@ -3,8 +3,7 @@ import aoc/util/fun
 import aoc/util/to
 import gleam/bool
 import gleam/dict
-import gleam/int
-import gleam/io
+
 import gleam/list
 import gleam/set.{type Set}
 import pocket_watch

@@ -48,7 +48,7 @@ pub fn find_next_postion(
   case dict.get(input_dict, next_position) {
     Ok(po) if po == "." -> Ok(change_list)
     Ok(po) if po == "#" -> Error(Nil)
-    Ok(po) -> {
+    Ok(_) -> {
       let change_list =
         list.append(change_list, [
           #(
@@ -112,7 +112,7 @@ pub fn find_next_postion2(
   change_list,
   input_dict: Dict(Posn, String),
 ) {
-  list.fold(current, [], fn(acc, p) {
+  list.fold(current, [], fn(_, p) {
     let next_position =
       array2d.add_posns(p, array2d.get_direction_dir(direction))
     io.debug(#(
@@ -174,8 +174,8 @@ pub fn find_next_postion2(
           input_dict,
         ))
       }
-      Ok(po), Ok(po1) if po == "." -> Ok(change_list)
-      Ok(po), Ok(po1) if po == "#" -> Error([])
+      Ok(po), Ok(_) if po == "." -> Ok(change_list)
+      Ok(po), Ok(_) if po == "#" -> Error([])
 
       Ok(_), Ok(_) -> {
         io.debug("--------")
@@ -270,7 +270,7 @@ pub fn part1(input: String) {
 fn change_map(input_position_array_level: List(List(#(Posn, String)))) {
   list.map(input_position_array_level, fn(p) {
     list.fold(p, [], fn(acc, item) {
-      let #(position, char) = item
+      let #(_, char) = item
       let new_item = case char {
         "#" -> ["#", "#"]
         "O" -> ["[", "]"]
@@ -285,13 +285,7 @@ fn change_map(input_position_array_level: List(List(#(Posn, String)))) {
 }
 
 pub fn part2(input: String) -> Int {
-  let #(
-    input_position_array,
-    input_dict,
-    moves,
-    width,
-    input_position_array_level,
-  ) =
+  let #(_, _, moves, width, input_position_array_level) =
     input
     |> parse
 

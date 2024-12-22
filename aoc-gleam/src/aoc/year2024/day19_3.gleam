@@ -11,7 +11,7 @@ fn parse(input) {
 }
 
 pub fn part1(input: String) -> Int {
-  let #(towels, designs) = parse(input)
+  let #(_, designs) = parse(input)
   {
     use design <- list.flat_map(designs)
     list.fold(list.range(1, string.length(design)), [], fn(acc, item) {

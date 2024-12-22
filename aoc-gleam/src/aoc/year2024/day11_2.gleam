@@ -1,7 +1,7 @@
 import aoc/util/array2d.{type Posn}
 
 import aoc/util/to
-import gleam/dict.{type Dict}
+import gleam/dict
 
 import gleam/list
 

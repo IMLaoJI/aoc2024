@@ -4,12 +4,10 @@ import aoc/util/to
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{Some}
 import gleam/regexp.{type Match, Match}
 
 import gleam/string
-
-import gleam/dict.{type Dict}
 
 type ButtonConfig {
   ButtonConfig(x: Int, y: Int, cost: Int)
