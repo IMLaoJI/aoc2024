@@ -29,19 +29,71 @@ fn parse(input) {
   Config(input_dict, start, end)
 }
 
+fn get_possible_cheats(input_dict) {
+  dict.filter(input_dict, fn(_, value) { list.contains([".", "S", "E"], value) })
+  |> dict.fold([], fn(acc, key, _) {
+    array2d.ortho_neighbors_with_direction(key)
+    |> list.fold(acc, fn(acc, p) {
+      let #(pos, dir) = p
+      case
+        dict.get(input_dict, pos),
+        dict.get(input_dict, array2d.add_posns(pos, dir))
+      {
+        Ok("#"), Ok(".") ->
+          list.append(acc, [#(key, array2d.add_posns(pos, dir))])
+        _, _ -> acc
+      }
+    })
+  })
+}
+
 pub fn part1(input: String) -> Int {
   let config =
     input
     |> parse
   let #(from_start, _) = search.dijkstra(config, config.start.0, edges)
   let #(from_end, _) = search.dijkstra(config, config.end.0, edges)
-  io.debug(#(from_start, config.end.0))
-  dict.get(from_start, config.end.0) |> io.debug
-  1
+  let honest = dict.get(from_start, config.end.0) |> io.debug |> to.unwrap
+  get_possible_cheats(config.input_dict)
+  |> list.fold(0, fn(acc, p) {
+    case
+      to.unwrap(dict.get(from_start, p.0))
+      + to.unwrap(dict.get(from_end, p.1))
+      + 2
+      + 100
+      <= honest
+    {
+      True -> acc + 1
+      False -> acc
+    }
+  })
 }
 
 pub fn part2(input: String) -> Int {
-  input
-  |> parse
-  1
+  let config =
+    input
+    |> parse
+  let #(from_start, _) = search.dijkstra(config, config.start.0, edges)
+  let #(from_end, _) = search.dijkstra(config, config.end.0, edges)
+  let honest = dict.get(from_start, config.end.0) |> io.debug |> to.unwrap
+  let opens =
+    dict.filter(config.input_dict, fn(_, value) {
+      list.contains([".", "S", "E"], value)
+    })
+    |> dict.keys
+
+  use acc, cs <- list.fold(opens, 0)
+  use acc2, ce <- list.fold(opens, acc)
+  let dst = int.absolute_value(cs.r - ce.r) + int.absolute_value(cs.c - ce.c)
+  use <- bool.guard(dst > 20, acc2)
+  case
+    to.unwrap(dict.get(from_start, cs))
+    + to.unwrap(dict.get(from_end, ce))
+    + dst
+    + 100
+    <= honest
+  {
+    True -> acc2 + 1
+    False -> acc2
+  }
 }

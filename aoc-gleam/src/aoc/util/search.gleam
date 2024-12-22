@@ -1,4 +1,6 @@
 import aoc/util/array2d.{type Direction, type Posn, Down, Left, Posn, Right, Top}
+import gleam/deque
+import gleam/set
 
 import aoc/util/to
 import gleam/bool
@@ -129,4 +131,63 @@ pub fn dijkstra_with_target_heuristic(
 
 pub fn dijkstra(config, start, edges) {
   dijkstra_with_target_heuristic(config, start, None, None, edges)
+}
+
+fn get_path(prev_dict, current, path) {
+  case dict.has_key(prev_dict, current) {
+    True -> {
+      let prev = to.unwrap(dict.get(prev_dict, current))
+      get_path(prev_dict, prev, list.append(path, [prev]))
+    }
+    False -> list.reverse(path)
+  }
+}
+
+fn bfs_round(config: Config, queue, visited, prev_dict) {
+  case deque.is_empty(queue) {
+    True -> panic
+    False -> {
+      let assert Ok(#(#(#(pos, char), dist), rest_queue)) =
+        deque.pop_front(queue)
+      use <- bool.lazy_guard(char == config.end.1, fn() {
+        #(dist, get_path(prev_dict, pos, [pos]))
+      })
+      let #(acc_prev_dict, acc_dst, acc_rest_queue) = {
+        use #(acc_prev_dict, acc_dst, acc_rest_queue) as acc, item <- list.fold(
+          array2d.get_dir_type(),
+          #(prev_dict, visited, rest_queue),
+        )
+        let new_posotion = array2d.add_direction(pos, item)
+        case
+          dict.has_key(config.input_dict, new_posotion)
+          && to.unwrap(dict.get(config.input_dict, new_posotion)) != "#"
+          && !set.contains(acc_dst, new_posotion)
+        {
+          True -> {
+            #(
+              dict.insert(acc_prev_dict, new_posotion, pos),
+              set.insert(acc_dst, new_posotion),
+              deque.push_back(acc_rest_queue, #(
+                #(
+                  new_posotion,
+                  to.unwrap(dict.get(config.input_dict, new_posotion)),
+                ),
+                dist + 1,
+              )),
+            )
+          }
+          False -> acc
+        }
+      }
+      bfs_round(config, acc_rest_queue, acc_dst, acc_prev_dict)
+    }
+  }
+}
+
+pub fn bfs(config: Config) {
+  let queue =
+    deque.new()
+    |> deque.push_back(#(config.start, 0))
+  let visited = set.new() |> set.insert(config.start.0)
+  bfs_round(config, queue, visited, dict.new())
 }
