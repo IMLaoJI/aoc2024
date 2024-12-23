@@ -1,23 +1,15 @@
-import aoc/util/array2d.{type Posn, Posn}
-import aoc/util/fun
 import aoc/util/to
-import gleam/bool
-import gleam/deque
-import gleam/dict.{type Dict}
-import gleam/function
+import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/set.{type Set}
 import gleam/string
 
 fn parse(input: String) {
   input
   |> string.split("\r\n")
   |> list.fold(dict.new(), fn(acc, p) {
-    // io.debug(p)
     let assert Ok(#(first, second)) = string.split_once(p, "-")
-
     dict.insert(acc, first <> second, first)
     |> dict.insert(second <> first, second)
   })
