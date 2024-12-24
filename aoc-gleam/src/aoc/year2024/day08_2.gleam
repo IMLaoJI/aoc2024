@@ -85,7 +85,6 @@ fn next_antinode(grid, offset, map, acc) {
 }
 
 pub fn pt_2(input: Map) {
-  io.debug(100 / 100)
   input
   |> collect_antennas
   |> dict.values()

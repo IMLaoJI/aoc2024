@@ -1,7 +1,5 @@
-import aoc/util/array2d
 import aoc/util/coord.{type Coord, Coord}
 import aoc/util/from
-import aoc/util/to
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/io
@@ -165,54 +163,14 @@ fn update_coordinate_sum(acc: Int, k: Coord, v: Tile) -> Int {
   }
 }
 
-pub fn parse(input) {
-  let assert [map, steps] = string.split(input, "\r\n\r\n")
-  let map_config =
-    from.grid(map, array2d.Posn, fn(c) {
-      case c {
-        "." -> Nothing
-        "O" -> Box
-        "#" -> Wall
-        "[" -> LeftBox
-        "]" -> RightBox
-        "@" -> Robot
-        _ -> panic
-      }
-    })
-  let steps_config =
-    steps
-    |> string.split("\r\n")
-    |> list.flat_map(fn(line) {
-      line
-      |> string.split("")
-      |> list.map(fn(c) {
-        case c {
-          "^" -> Up
-          "v" -> Down
-          "<" -> Left
-          ">" -> Right
-          _ -> panic
-        }
-      })
-    })
-
-  #(map_config, steps_config)
-}
-
-fn find_robot(map_config) {
-  map_config
-  |> dict.filter(fn(_, v) { v == Robot })
-  |> dict.keys
-  |> list.first
-  |> to.unwrap
-}
-
 pub fn part1(input: String) -> Int {
-  let #(map_config, steps_config) = parse(input)
-  // let steps = parse_steps(steps)
-  let robot = find_robot(map_config)
-  // dict.fold(next_step(robot, map, steps), 0, update_coordinate_sum)
-  1
+  let assert [map, steps] = string.split(input, "\r\n\r\n")
+  let map = parse_map(map)
+  let steps = parse_steps(steps)
+
+  let assert [robot] = map |> dict.filter(fn(_, v) { v == Robot }) |> dict.keys
+
+  dict.fold(next_step(robot, map, steps), 0, update_coordinate_sum)
 }
 
 pub fn part2(input: String) -> Int {
