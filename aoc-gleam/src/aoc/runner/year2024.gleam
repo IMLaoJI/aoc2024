@@ -31,6 +31,7 @@ import aoc/year2024/day15
 import aoc/year2024/day15_2
 import aoc/year2024/day16
 import aoc/year2024/day17
+import aoc/year2024/day17_2
 import aoc/year2024/day18
 import aoc/year2024/day19
 import aoc/year2024/day19_2
@@ -112,6 +113,8 @@ pub fn run(input: String, day: Int, part: Int) {
     16, 2 -> input |> day16.part2 |> string.inspect
     17, 1 -> input |> day17.part1 |> string.inspect
     17, 2 -> input |> day17.part2 |> string.inspect
+    17, 11 -> input |> day17_2.part1 |> string.inspect
+    17, 22 -> input |> day17_2.part2 |> string.inspect
     18, 1 -> input |> day18.part1 |> string.inspect
     18, 2 -> input |> day18.part2 |> string.inspect
     19, 1 -> input |> day19.part1 |> string.inspect

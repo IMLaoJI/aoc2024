@@ -1,210 +1,158 @@
-import aoc/util/fun
-import aoc/util/re
+import aoc/util/math
 import aoc/util/to
+import gary.{type ErlangArray}
+import gary/array
 import gleam/bool
-import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
-import gleam/option.{Some}
-import gleam/regexp.{type Match, Match}
-import gleam/result
+import gleam/option
+import gleam/regexp
 import gleam/string
 
-type Config {
-  Config(a: Int, b: Int, c: Int, propgram: List(Int))
+pub type Register {
+  Register(
+    a: Int,
+    b: Int,
+    c: Int,
+    pointer: Int,
+    program: ErlangArray(Int),
+    output: List(Int),
+  )
 }
 
-fn get_number(str) {
-  get_numbers(str)
-  |> list.first
-  |> to.unwrap
+pub fn parse(input: String) -> Register {
+  let assert Ok(register_re) = regexp.from_string("Register .: (\\d+)\r\n")
+  let assert Ok(program_re) = regexp.from_string("Program: (.+)$")
+
+  let assert [a, b, c] =
+    regexp.scan(register_re, input)
+    |> list.flat_map(fn(m) { option.values(m.submatches) })
+    |> list.map(to.int)
+
+  let assert [regexp.Match(submatches: [option.Some(program)], ..)] =
+    regexp.scan(program_re, input)
+  let program = program |> to.ints(",") |> array.from_list(-1)
+
+  Register(a:, b:, c:, pointer: 0, program:, output: [])
 }
 
-fn get_numbers(str) {
-  let regex_str = re.from_string("(\\d+)")
-  list.fold(regexp.scan(regex_str, str), [], fn(sumal, match) {
-    let assert Match(submatches: [Some(left)], ..) = match
-    list.append(sumal, [to.int(left)])
-  })
-}
-
-fn parse(input) {
-  let assert [first, second] =
-    input
-    |> string.split("\r\n\r\n")
-  let assert [config_a, config_b, config_c] = string.split(first, "\r\n")
-  let a = get_number(config_a)
-  let b = get_number(config_b)
-  let c = get_number(config_c)
-  let program = get_numbers(second)
-  Config(a, b, c, program)
-}
-
-fn get_operand_value(operand, config: Config) {
+fn as_combo(operand: Int, register: Register) -> Int {
   case operand {
-    _ if operand < 4 -> operand
-    4 -> config.a
-    5 -> config.b
-    6 -> config.c
+    0 | 1 | 2 | 3 -> operand
+    4 -> register.a
+    5 -> register.b
+    6 -> register.c
     _ -> panic
   }
 }
 
-fn mod(first, second) {
-  { { first % second } + second } % second
-}
-
-fn do(
-  directions: List(List(Int)),
-  total_directions: List(List(Int)),
-  config: Config,
-  out: List(Int),
-) {
-  let next_do = fn(new_config) {
-    do(
-      result.unwrap(list.rest(directions), []),
-      total_directions,
-      new_config,
-      out,
-    )
-  }
-  case list.is_empty(directions) {
-    True -> out
-    False -> {
-      // io.debug(#(directions, config, out))
-      let assert Ok(direction) = list.first(directions)
-      let assert Ok(opcode) = list.first(direction)
-      let assert Ok(operand) = list.last(direction)
-      case opcode {
-        0 -> {
-          let assert Ok(divisor) =
-            int.power(2, int.to_float(get_operand_value(operand, config)))
-          next_do(
-            Config(
-              ..config,
-              a: to.unwrap(int.floor_divide(config.a, float.round(divisor))),
-            ),
-          )
-        }
-        1 -> {
-          next_do(
-            Config(..config, b: int.bitwise_exclusive_or(config.b, operand)),
-          )
-        }
-        2 -> {
-          next_do(
-            Config(..config, b: mod(get_operand_value(operand, config), 8)),
-          )
-        }
-        3 -> {
-          case config.a == 0 {
-            True -> {
-              next_do(config)
-            }
-            False -> {
-              do(total_directions, total_directions, config, out)
-            }
-          }
-        }
-        4 -> {
-          next_do(
-            Config(..config, b: int.bitwise_exclusive_or(config.b, config.c)),
-          )
-        }
-        5 -> {
-          do(
-            result.unwrap(list.rest(directions), []),
-            total_directions,
-            config,
-            list.append(out, [mod(get_operand_value(operand, config), 8)]),
-          )
-        }
-        6 -> {
-          let assert Ok(divisor) =
-            int.power(2, int.to_float(get_operand_value(operand, config)))
-          next_do(
-            Config(
-              ..config,
-              b: to.unwrap(int.floor_divide(config.a, float.round(divisor))),
-            ),
-          )
-        }
-        7 -> {
-          let assert Ok(divisor) =
-            int.power(2, int.to_float(get_operand_value(operand, config)))
-          next_do(
-            Config(
-              ..config,
-              c: to.unwrap(int.floor_divide(config.a, float.round(divisor))),
-            ),
-          )
-        }
-        _ -> panic
+fn do_op(instruction: Int, operand: Int, register: Register) {
+  let Register(a:, b:, c:, pointer:, output:, ..) = register
+  case instruction {
+    0 ->
+      Register(
+        ..register,
+        a: a / math.pow(2, as_combo(operand, register)),
+        pointer: pointer + 2,
+      )
+    1 ->
+      Register(
+        ..register,
+        b: int.bitwise_exclusive_or(b, operand),
+        pointer: pointer + 2,
+      )
+    2 ->
+      Register(
+        ..register,
+        b: as_combo(operand, register) % 8,
+        pointer: pointer + 2,
+      )
+    3 ->
+      case register.a {
+        0 -> Register(..register, pointer: pointer + 2)
+        _ -> Register(..register, pointer: operand)
       }
-    }
+    4 ->
+      Register(
+        ..register,
+        b: int.bitwise_exclusive_or(b, c),
+        pointer: pointer + 2,
+      )
+    5 ->
+      Register(
+        ..register,
+        output: [as_combo(operand, register) % 8, ..output],
+        pointer: pointer + 2,
+      )
+    6 ->
+      Register(
+        ..register,
+        b: a / math.pow(2, as_combo(operand, register)),
+        pointer: pointer + 2,
+      )
+    7 ->
+      Register(
+        ..register,
+        c: a / math.pow(2, as_combo(operand, register)),
+        pointer: pointer + 2,
+      )
+    _ -> panic
   }
 }
 
-pub fn part1(input: String) -> Int {
-  let config =
-    input
-    |> parse
+fn run_program(register: Register) {
+  let Register(pointer:, program:, output:, ..) = register
+  let op = array.get(program, pointer)
+  let operand = array.get(program, pointer + 1)
 
-  let dirs =
-    config.propgram
-    |> list.sized_chunk(2)
+  case op, operand {
+    Ok(-1), _ | _, Ok(-1) -> output |> list.reverse
+    Ok(op), Ok(operand) -> do_op(op, operand, register) |> run_program
+    _, _ -> panic
+  }
+}
 
-  do(dirs, dirs, config, [])
-  // |> io.debug
+pub fn pt_1(input: Register) {
+  run_program(input)
   |> list.map(int.to_string)
   |> string.join(",")
-  |> io.debug
-
-  1
 }
 
-//   Based on the program:
-//   B = A & 7
-//   B = B ^ 7
-//   C = A // 2**B
-//   B = B ^ C
-//   B = B ^ 4
-//   A = A // 8
-//   OUT(B & 7)
-//   jnz A 0
-fn encode(num, i, program, res) {
-  use <- bool.guard(i < 0, res)
-  let val = to.unwrap(fun.get_at(program, i))
-  list.flat_map(list.range(0, 7), fn(p) {
-    let new_num = 8 * num + p
-    let b = int.bitwise_exclusive_or(p, 7)
-    let assert Ok(divisor) = int.power(2, int.to_float(b))
-    let c = to.unwrap(int.floor_divide(new_num, float.round(divisor)))
-    let b = int.bitwise_exclusive_or(b, c)
-    let b = int.bitwise_exclusive_or(b, 4)
-    case mod(b, 8) == val {
-      True -> {
-        case i == 0 {
-          True -> {
-            list.append(res, [new_num])
-          }
-          False -> {
-            encode(new_num, i - 1, program, res)
-          }
-        }
-      }
-      False -> res
+fn is_prefix_of(prefix: List(a), source: List(a)) {
+  case prefix, source {
+    [], _ -> True
+    [a, ..a_rest], [b, ..b_rest] if a == b -> is_prefix_of(a_rest, b_rest)
+    _, _ -> False
+  }
+}
+
+fn search_for_a(goal, acc, register) {
+  use <- bool.guard(list.is_empty(acc), Error(Nil))
+  let assert [next, ..rest] = acc
+  let trial_quine = Register(..register, a: next) |> run_program |> list.reverse
+  use <- bool.guard(trial_quine == goal, Ok(next))
+  case is_prefix_of(trial_quine, goal) {
+    True -> {
+      list.range(0, 7)
+      |> list.map(fn(n) { next * 8 + n })
+      |> list.append(rest)
+      |> search_for_a(goal, _, register)
     }
-  })
+    False -> search_for_a(goal, rest, register)
+  }
 }
 
-pub fn part2(input: String) -> Int {
-  let config =
-    input
-    |> parse
+pub fn part1(input: String) {
+  pt_1(input |> parse)
+}
 
-  encode(0, list.length(config.propgram) - 1, config.propgram, [])
-  |> list.first
-  |> to.unwrap
+pub fn part2(input: String) {
+  pt_2(input |> parse)
+}
+
+pub fn pt_2(input: Register) {
+  input.program
+  |> array.to_list
+  |> list.reverse
+  |> search_for_a(list.range(0, 7), input)
 }
