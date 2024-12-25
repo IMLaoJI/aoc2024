@@ -1,11 +1,9 @@
-import aoc/util/array2d.{type Posn, Posn}
 import aoc/util/to
 import gleam/bool
-import gleam/dict.{type Dict}
+import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/result
 import gleam/string
 
 fn parse(input: String) {
