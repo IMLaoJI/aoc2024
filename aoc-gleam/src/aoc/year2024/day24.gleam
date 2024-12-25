@@ -1,9 +1,11 @@
 import aoc/util/array2d.{type Posn, Posn}
 import aoc/util/to
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
 
 fn parse(input: String) {
@@ -111,7 +113,6 @@ fn get_num(moves, config, num) {
   |> list.sort(fn(a, b) { string.compare(b.0, a.0) })
   |> list.map(fn(a) { a.1 |> int.to_string })
   |> string.join("")
-  |> io.debug
   |> int.base_parse(2)
   |> to.unwrap
 }
@@ -127,6 +128,79 @@ pub fn part1(input: String) -> Int {
   |> get_num(config, "z")
 }
 
+fn find(op1, op2, op, moves) {
+  let find =
+    moves
+    |> list.find(fn(item) {
+      case item {
+        [o1, operate, o2, o4]
+          if operate == op
+          && { o1 == op1 && o2 == op2 || o1 == op2 && o2 == op1 }
+        -> {
+          True
+        }
+        _ -> False
+      }
+    })
+  case find {
+    Ok(li) -> list.last(li) |> to.unwrap
+    Error(_) -> ""
+  }
+}
+
+// half adder
+// X1 XOR Y1 => M1
+// X1 AND Y1 => N1
+// C0 AND M1 => R1
+// C0 XOR M1 -> Z1
+// R1 OR N1 -> C1
+fn swap(acc, item, moves) {
+  let #(current_c, swap_list) = acc
+  let xn = "x" <> string.pad_start(item |> int.to_string, 2, "0")
+  let yn = "y" <> string.pad_start(item |> int.to_string, 2, "0")
+  let m1 = find(xn, yn, "XOR", moves)
+  let n1 = find(xn, yn, "AND", moves)
+  use <- bool.guard(current_c == "", #(n1, swap_list))
+  let r1 = find(current_c, m1, "AND", moves)
+  let #(swap_list, n1, m1, r1) = case r1 {
+    "" -> {
+      #(
+        list.append(swap_list, [[m1, n1]]),
+        m1,
+        n1,
+        find(current_c, n1, "AND", moves),
+      )
+    }
+    _ -> #(swap_list, n1, m1, r1)
+  }
+  let z1 = find(current_c, m1, "XOR", moves)
+  let #(swap_list, m1, z1) = case m1 {
+    "z" <> _ -> {
+      #(list.append(swap_list, [[m1, z1]]), z1, m1)
+    }
+    _ -> #(swap_list, m1, z1)
+  }
+
+  let #(swap_list, n1, z1) = case n1 {
+    "z" <> _ -> {
+      #(list.append(swap_list, [[n1, z1]]), z1, n1)
+    }
+    _ -> #(swap_list, n1, z1)
+  }
+
+  let #(swap_list, r1, z1) = case r1 {
+    "z" <> _ -> #(list.append(swap_list, [[r1, z1]]), z1, r1)
+    _ -> #(swap_list, r1, z1)
+  }
+
+  let c1 = find(r1, n1, "OR", moves)
+  let #(swap_list, c1, z1) = case c1 {
+    "z" <> _ if c1 != "z45" -> #(list.append(swap_list, [[c1, z1]]), z1, c1)
+    _ -> #(swap_list, c1, z1)
+  }
+  #(c1, swap_list)
+}
+
 pub fn part2(input: String) -> Int {
   let #(config, moves) =
     input
@@ -136,9 +210,17 @@ pub fn part2(input: String) -> Int {
     |> list.sort(fn(a, b) {
       string.compare(to.unwrap(list.first(b)), to.unwrap(list.first(a)))
     })
-  let x = get_num(moves, config, "x")
-  let y = get_num(moves, config, "y")
-  let z = get_num(moves, config, "z")
-  io.debug(#(x, y, z))
+  let #(_, swaps_list) =
+    list.fold(list.range(0, 44), #("", []), fn(acc, item) {
+      swap(acc, item, moves)
+    })
+
+  swaps_list
+  |> io.debug
+  |> list.flatten
+  |> list.sort(string.compare)
+  |> string.join(",")
+  |> io.debug
+
   1
 }
