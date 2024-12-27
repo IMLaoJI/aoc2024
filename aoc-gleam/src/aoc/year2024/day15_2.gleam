@@ -1,4 +1,4 @@
-import aoc/util/array2d
+import aoc/util/array2d.{type Direction, type Posn, Down, Left, Right, Top}
 import aoc/util/coord.{type Coord, Coord}
 import aoc/util/from
 import aoc/util/to
@@ -18,28 +18,15 @@ pub type Tile {
   Robot
 }
 
-pub type Direction {
-  Up
-  Down
-  Left
-  Right
-}
-
-type Found {
-  Found(pos: Coord, tile: Tile)
-}
-
-fn to_delta(dir: Direction) -> Coord {
-  case dir {
-    Up -> Coord(-1, 0)
-    Down -> Coord(1, 0)
-    Left -> Coord(0, -1)
-    Right -> Coord(0, 1)
+fn update_coordinate_sum(acc: Int, k: Coord, v: Tile) -> Int {
+  case v {
+    Box | LeftBox -> k.c + 100 * k.r + acc
+    _ -> acc
   }
 }
 
-fn parse_map(input: String) -> Dict(Coord, Tile) {
-  from.grid(input |> string.trim, Coord, fn(c) {
+fn parse_map(map) {
+  from.grid(map, array2d.Posn, fn(c) {
     case c {
       "." -> Nothing
       "O" -> Box
@@ -52,150 +39,28 @@ fn parse_map(input: String) -> Dict(Coord, Tile) {
   })
 }
 
-fn parse_steps(input: String) -> List(Direction) {
-  case input |> string.trim {
-    "" -> []
-    "\n" <> rest -> parse_steps(rest)
-    "^" <> rest -> [Up, ..parse_steps(rest)]
-    "v" <> rest -> [Down, ..parse_steps(rest)]
-    "<" <> rest -> [Left, ..parse_steps(rest)]
-    ">" <> rest -> [Right, ..parse_steps(rest)]
-    _ -> panic
-  }
-}
-
-fn next_step(
-  robot: Coord,
-  map: Dict(Coord, Tile),
-  steps: List(Direction),
-) -> Dict(Coord, Tile) {
-  use <- bool.guard(list.is_empty(steps), map)
-  let assert [next, ..rest] = steps
-  let delta = to_delta(next)
-  let maybe = coord.go(robot, delta)
-  let assert Ok(at_destination) = dict.get(map, maybe)
-  case at_destination {
-    Nothing -> move_boxes([Found(robot, Robot)], map, maybe, rest, delta)
-    LeftBox | RightBox | Box -> {
-      let boxes = case next, at_destination {
-        Left, _ | Right, _ | _, Box -> check_horiz_box(robot, map, delta, [])
-        Up, _ | Down, _ ->
-          check_vert_box(robot, map, delta, Ok([Found(robot, Robot)]))
-      }
-      case boxes {
-        Ok(found_boxes) -> move_boxes(found_boxes, map, maybe, rest, delta)
-        Error(_) -> next_step(robot, map, rest)
-      }
-    }
-    _wall -> next_step(robot, map, rest)
-  }
-}
-
-fn check_horiz_box(
-  coord: Coord,
-  map: Dict(Coord, Tile),
-  delta: Coord,
-  acc: List(Found),
-) -> Result(List(Found), Nil) {
-  let beyond = coord.go(coord, delta)
-  let assert Ok(tile) = dict.get(map, coord)
-  //   io.debug(acc)
-  case dict.get(map, beyond) {
-    Ok(Nothing) -> Ok([Found(coord, tile), ..acc])
-    Ok(LeftBox) | Ok(RightBox) | Ok(Box) ->
-      check_horiz_box(beyond, map, delta, [Found(coord, tile), ..acc])
-    _wall -> Error(Nil)
-  }
-}
-
-fn check_vert_box(
-  coord: Coord,
-  map: Dict(Coord, Tile),
-  delta: Coord,
-  acc: Result(List(Found), Nil),
-) -> Result(List(Found), Nil) {
-  let beyond = coord.go(coord, delta)
-  let assert Ok(at_beyond) = dict.get(map, beyond)
-  case at_beyond {
-    Nothing -> acc
-    LeftBox | RightBox -> {
-      let dir = case at_beyond {
-        LeftBox -> Right
-        RightBox -> Left
+fn parse_step(steps) {
+  steps
+  |> string.split("\r\n")
+  |> list.flat_map(fn(line) {
+    line
+    |> string.split("")
+    |> list.map(fn(c) {
+      case c {
+        "^" -> Top
+        "v" -> Down
+        "<" -> Left
+        ">" -> Right
         _ -> panic
       }
-      list.try_map([beyond, coord.go(beyond, to_delta(dir))], fn(b) {
-        let assert Ok(t) = dict.get(map, b)
-        acc
-        |> result.map(list.prepend(_, Found(b, t)))
-        |> check_vert_box(b, map, delta, _)
-      })
-      |> result.map(list.flatten)
-    }
-    _wall -> Error(Nil)
-  }
-}
-
-fn move_boxes(
-  bs: List(Found),
-  map: Dict(Coord, Tile),
-  dest: Coord,
-  next: List(Direction),
-  d: Coord,
-) -> Dict(Coord, Tile) {
-  //   io.debug(bs)
-  bs
-  |> list.fold(map, fn(m, b) { dict.insert(m, b.pos, Nothing) })
-  |> list.fold(bs, _, fn(m, b) { dict.insert(m, coord.go(b.pos, d), b.tile) })
-  |> next_step(dest, _, next)
-}
-
-fn preprocess(input: String) -> String {
-  input
-  |> string.replace("#", "##")
-  |> string.replace("O", "[]")
-  |> string.replace(".", "..")
-  |> string.replace("@", "@.")
-}
-
-fn update_coordinate_sum(acc: Int, k: Coord, v: Tile) -> Int {
-  case v {
-    Box | LeftBox -> k.c + 100 * k.r + acc
-    _ -> acc
-  }
+    })
+  })
 }
 
 pub fn parse(input) {
   let assert [map, steps] = string.split(input, "\r\n\r\n")
-  let map_config =
-    from.grid(map, array2d.Posn, fn(c) {
-      case c {
-        "." -> Nothing
-        "O" -> Box
-        "#" -> Wall
-        "[" -> LeftBox
-        "]" -> RightBox
-        "@" -> Robot
-        _ -> panic
-      }
-    })
-  let steps_config =
-    steps
-    |> string.split("\r\n")
-    |> list.flat_map(fn(line) {
-      line
-      |> string.split("")
-      |> list.map(fn(c) {
-        case c {
-          "^" -> Up
-          "v" -> Down
-          "<" -> Left
-          ">" -> Right
-          _ -> panic
-        }
-      })
-    })
-
+  let map_config = parse_map(map)
+  let steps_config = parse_step(steps)
   #(map_config, steps_config)
 }
 
@@ -207,19 +72,47 @@ fn find_robot(map_config) {
   |> to.unwrap
 }
 
+fn move_box(items: List(#(Posn, Tile)), map, dir) {
+  items
+  |> list.fold(map, fn(acc, t) { dict.insert(acc, t.0, Nothing) })
+  |> list.fold(
+    items,
+    _,
+    fn(acc, t) { dict.insert(acc, array2d.add_posns(t.0, dir), t.1) },
+  )
+}
+
+fn next_step(robot: Posn, map: Dict(Posn, Tile), steps: List(Direction)) {
+  use <- bool.guard(list.is_empty(steps), map)
+  let assert [next, ..rest] = steps
+  let delta = array2d.get_direction_dir(next)
+  let next = array2d.add_posns(robot, delta)
+  case dict.get(map, next) {
+    Ok(Nothing) -> {
+      move_box([#(robot, Robot)], map, delta)
+      |> next_step(next, _, rest)
+    }
+    Ok(LeftBox) | Ok(RightBox) | Ok(Box) -> {
+      todo
+    }
+    _ -> next_step(robot, map, rest)
+  }
+  todo
+}
+
 pub fn part1(input: String) -> Int {
   let #(map_config, steps_config) = parse(input)
-  // let steps = parse_steps(steps)
-  let robot = find_robot(map_config)
-  // dict.fold(next_step(robot, map, steps), 0, update_coordinate_sum)
+  let robot = find_robot(map_config) |> io.debug
+  next_step(robot, map_config, steps_config)
   1
 }
 
 pub fn part2(input: String) -> Int {
-  let assert [map, steps] = string.split(input, "\r\n\r\n")
-  let map = map |> preprocess |> parse_map
-  let steps = parse_steps(steps)
-  let assert [robot] = map |> dict.filter(fn(_, v) { v == Robot }) |> dict.keys
+  // let assert [map, steps] = string.split(input, "\r\n\r\n")
+  // let map = map |> preprocess |> parse_map
+  // let steps = parse_steps(steps)
+  // let assert [robot] = map |> dict.filter(fn(_, v) { v == Robot }) |> dict.keys
 
-  dict.fold(next_step(robot, map, steps), 0, update_coordinate_sum)
+  // dict.fold(next_step(robot, map, steps), 0, update_coordinate_sum)
+  1
 }

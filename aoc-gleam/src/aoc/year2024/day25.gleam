@@ -1,5 +1,4 @@
 import aoc/util/to
-import gleam/io
 import gleam/list
 import gleam/string
 
@@ -30,7 +29,6 @@ fn parse(input: String) {
       False -> [locks, list.append(keys, [#(list.length(origin), pins)])]
     }
   })
-  |> io.debug
 }
 
 pub fn part1(input: String) -> Int {
