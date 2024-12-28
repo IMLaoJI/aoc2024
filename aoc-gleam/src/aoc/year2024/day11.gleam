@@ -1,4 +1,3 @@
-import aoc/util/array2d
 import aoc/util/to
 import gleam/dict
 import gleam/int
@@ -12,7 +11,7 @@ fn parse(input) {
     |> string.trim
     |> string.split(" ")
     |> list.map(string.split(_, ""))
-  dict.map_values(list.group(parse, fn(n) { n }), fn(a, b) { list.length(b) })
+  dict.map_values(list.group(parse, fn(n) { n }), fn(_, b) { list.length(b) })
 }
 
 fn split(num) {

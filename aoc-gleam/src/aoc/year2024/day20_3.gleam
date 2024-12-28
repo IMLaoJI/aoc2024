@@ -1,15 +1,14 @@
-import aoc/util/array2d.{type Posn, Posn}
-import aoc/util/fun
+import aoc/util/array2d
+
 import aoc/util/to
 import gleam/bool
-import gleam/deque
-import gleam/dict.{type Dict}
-import gleam/function
+
+import gleam/dict
+
 import gleam/int
 import gleam/io
 import gleam/list
 import gleam/result
-import gleam/set
 
 import aoc/util/search.{Config}
 

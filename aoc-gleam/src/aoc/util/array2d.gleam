@@ -21,6 +21,10 @@ pub fn add_direction(p1: Posn, dir: Direction) -> Posn {
   add_posns(p1, get_direction_dir(dir))
 }
 
+pub fn add_direction_normal(p1: Posn, dir: Direction) -> Posn {
+  add_posns(p1, get_direction_dir_normal(dir))
+}
+
 pub fn offset_posns(p1: Posn, p2: Posn) -> Posn {
   case p1, p2 {
     Posn(r1, c1), Posn(r2, c2) -> Posn(r2 - r1, c2 - c1)
@@ -41,6 +45,15 @@ pub fn get_direction_dir(direction) {
     Right -> Posn(0, 1)
     Top -> Posn(-1, 0)
     Down -> Posn(1, 0)
+  }
+}
+
+pub fn get_direction_dir_normal(direction) {
+  case direction {
+    Left -> Posn(0, -1)
+    Right -> Posn(0, 1)
+    Top -> Posn(1, 0)
+    Down -> Posn(-1, 0)
   }
 }
 

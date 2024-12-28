@@ -1,4 +1,4 @@
-import aoc/util/array2d.{type Direction, type Posn, Down, Left, Posn, Right, Top}
+import aoc/util/array2d.{type Posn, Posn}
 import gleam/deque
 import gleam/set
 

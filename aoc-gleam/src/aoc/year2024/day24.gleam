@@ -37,7 +37,7 @@ fn execute(todo_moves, config) {
       let new_do =
         todo_moves
         |> list.group(by: fn(item) {
-          let assert [first, op, second, out] as a = item
+          let assert [first, _, second, _] = item
           case dict.get(config, first), dict.get(config, second) {
             _, Error(_) | Error(_), _ -> {
               "false"
@@ -68,7 +68,7 @@ fn excute_one(moves, config) {
   moves
   |> list.fold(#(config, []), fn(c_acc, item) {
     let #(acc, todo_move) = c_acc
-    let assert [first, op, second, out] as a = item
+    let assert [first, op, second, out] = item
     case dict.get(acc, first), dict.get(acc, second) {
       _, Error(_) | Error(_), _ -> {
         #(acc, list.append(todo_move, [item]))
@@ -131,7 +131,7 @@ fn find(op1, op2, op, moves) {
     moves
     |> list.find(fn(item) {
       case item {
-        [o1, operate, o2, o4]
+        [o1, operate, o2, _]
           if operate == op
           && { o1 == op1 && o2 == op2 || o1 == op2 && o2 == op1 }
         -> {
@@ -172,7 +172,7 @@ fn swap(acc, item, moves) {
     _ -> #(swap_list, n1, m1, r1)
   }
   let z1 = find(current_c, m1, "XOR", moves)
-  let #(swap_list, m1, z1) = case m1 {
+  let #(swap_list, _, z1) = case m1 {
     "z" <> _ -> {
       #(list.append(swap_list, [[m1, z1]]), z1, m1)
     }
@@ -192,7 +192,7 @@ fn swap(acc, item, moves) {
   }
 
   let c1 = find(r1, n1, "OR", moves)
-  let #(swap_list, c1, z1) = case c1 {
+  let #(swap_list, c1, _) = case c1 {
     "z" <> _ if c1 != "z45" -> #(list.append(swap_list, [[c1, z1]]), z1, c1)
     _ -> #(swap_list, c1, z1)
   }
@@ -200,7 +200,7 @@ fn swap(acc, item, moves) {
 }
 
 pub fn part2(input: String) -> Int {
-  let #(config, moves) =
+  let #(_, moves) =
     input
     |> parse
   let moves =

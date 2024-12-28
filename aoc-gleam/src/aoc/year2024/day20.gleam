@@ -1,5 +1,4 @@
 import aoc/util/array2d.{type Posn, Posn}
-import aoc/util/fun
 import aoc/util/to
 import gleam/bool
 import gleam/deque

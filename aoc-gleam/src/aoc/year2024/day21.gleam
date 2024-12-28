@@ -4,7 +4,6 @@ import aoc/util/to
 import gleam/bool
 import gleam/deque
 import gleam/dict.{type Dict}
-import gleam/float
 import gleam/int
 import gleam/io
 import gleam/list
@@ -96,7 +95,7 @@ fn bfs(config: Config, queue, visited, prev_dict) {
   case deque.is_empty(queue) {
     True -> panic
     False -> {
-      let assert Ok(#(#(#(Posn(cur_x, cur_y) as pos, char), dist), rest_queue)) =
+      let assert Ok(#(#(#(pos, char), dist), rest_queue)) =
         deque.pop_front(queue)
       use <- bool.lazy_guard(char == config.end.1, fn() {
         #(dist, get_path(prev_dict, pos, ["A"]))
@@ -236,7 +235,6 @@ fn dijkstra_with_target_heuristic(
   let cost = dict.new() |> dict.insert(start, 0)
   let path = dict.new()
   let queue = pq.from_list([#(0, 0, start)], fn(a, b) { int.compare(a.0, b.0) })
-  let explored = 0
 
   dijkstra_with_target_heuristic_round(
     queue,

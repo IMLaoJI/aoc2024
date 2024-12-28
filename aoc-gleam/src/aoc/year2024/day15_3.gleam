@@ -2,7 +2,6 @@ import aoc/util/coord.{type Coord, Coord}
 import aoc/util/from
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
