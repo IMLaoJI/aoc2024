@@ -115,3 +115,14 @@ pub fn get_at(xs: List(a), k: Int) -> Result(a, Nil) {
 pub fn dict_get_unwrap(input_dict, key, default) {
   result.unwrap(dict.get(input_dict, key), default)
 }
+
+pub fn tails(list: List(a)) -> List(List(a)) {
+  tails_loop(list, [list])
+}
+
+pub fn tails_loop(list: List(a), acc: List(List(a))) -> List(List(a)) {
+  case list {
+    [_, ..rest] -> tails_loop(rest, [rest, ..acc])
+    [] -> list.reverse(acc)
+  }
+}
