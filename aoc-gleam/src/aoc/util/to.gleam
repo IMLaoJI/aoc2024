@@ -22,3 +22,8 @@ pub fn delimited_list(
 pub fn ints(str: String, split_on delimiter: String) -> List(Int) {
   delimited_list(str, delimiter, int)
 }
+
+pub fn list_tuple(li: List(a)) -> #(a, a) {
+  let assert [a, b] = li
+  #(a, b)
+}
