@@ -4,6 +4,7 @@ import gary.{type ErlangArray}
 import gary/array
 import gleam/bool
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option
 import gleam/regexp
@@ -33,7 +34,7 @@ pub fn parse(input: String) -> Register {
     regexp.scan(program_re, input)
   let program = program |> to.ints(",") |> array.from_list(-1)
 
-  Register(a:, b:, c:, pointer: 0, program:, output: [])
+  Register(a, b, c, pointer: 0, program:, output: [])
 }
 
 fn as_combo(operand: Int, register: Register) -> Int {
